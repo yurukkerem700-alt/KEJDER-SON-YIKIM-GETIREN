@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Börü: Son Kral - Kadim Hiçlik Titanı Güncellemesi</title>
+    <title>Börü: Son Kral - Sistem ve Market Güncellemesi</title>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; overflow: hidden; touch-action: none; }
         body, html { width: 100%; height: 100%; background-color: #030000; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; cursor: crosshair; }
@@ -38,6 +38,7 @@
         
         .damage-vignette { position: absolute; top: 0; left: 0; width: 100%; height: 100%; box-shadow: inset 0 0 200px rgba(0, 0, 0, 0); pointer-events: none; z-index: 5; transition: box-shadow 0.3s; }
         .low-hp { animation: pulseBlood 1s infinite alternate; }
+        .sahmeran-active { box-shadow: inset 0 0 250px rgba(0, 50, 10, 0.9) !important; } 
         @keyframes pulseBlood { from { box-shadow: inset 0 0 150px rgba(255, 0, 0, 0.5); } to { box-shadow: inset 0 0 300px rgba(255, 0, 0, 0.9); } }
 
         .overlay { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(5, 0, 0, 0.95); display: flex; flex-direction: column; justify-content: center; align-items: center; z-index: 100; color: white; }
@@ -54,7 +55,7 @@
         .theme-card.ice.active { border-color: #00ffff; box-shadow: 0 0 30px #00ffff; }
         .theme-card.poison.active { border-color: #33ff00; box-shadow: 0 0 30px #33ff00; }
         
-        #cardsContainer { display: flex; gap: 20px; margin-top: 30px; flex-wrap: wrap; justify-content: center; max-width: 800px; }
+        #cardsContainer, #shopCardsContainer { display: flex; gap: 20px; margin-top: 30px; flex-wrap: wrap; justify-content: center; max-width: 800px; }
         .upgrade-card { background: rgba(20, 20, 20, 0.9); border: 2px solid #555; border-radius: 10px; padding: 20px; width: 220px; text-align: center; cursor: pointer; transition: 0.2s; }
         .upgrade-card:hover { transform: translateY(-10px); background: rgba(40, 40, 40, 0.9); box-shadow: 0 0 20px rgba(255,255,255,0.2); }
 
@@ -65,6 +66,9 @@
         .mobBtn { width: 70px; height: 70px; border-radius: 50%; color: white; font-weight: bold; font-size: 12px; display: flex; justify-content: center; align-items: center; text-align: center; margin-bottom: 10px; }
         #fireBtn { background: rgba(255, 50, 0, 0.5); border: 2px solid #ff3300; margin-left: auto; width: 90px; height: 90px; font-size: 16px; }
         #ghostBtn { background: rgba(0, 255, 255, 0.5); border: 2px solid #00ffff; margin-right: 15px; }
+        #roarBtn { background: rgba(255, 150, 0, 0.5); border: 2px solid #ff9900; margin-right: 15px; }
+
+        #topControls { position: absolute; top: 20px; left: 50%; transform: translateX(-50%); z-index: 15; }
     </style>
 </head>
 <body>
@@ -72,9 +76,14 @@
     <div id="screenOverlay" class="damage-vignette"></div>
     <div id="waveAnnouncer">DALGA 1</div>
 
+    <div id="topControls" style="display:none;">
+        <button class="action-btn" style="padding: 8px 20px; font-size: 14px; margin-top:0;" onclick="togglePause()">DURDUR (ESC)</button>
+    </div>
+
     <div id="mobileControls">
         <div id="joystickZone"><div id="joystickKnob"></div></div>
         <div style="display:flex; align-items: flex-end;">
+            <div id="roarBtn" class="mobBtn">KÜKRE</div>
             <div id="ghostBtn" class="mobBtn">HAYALET</div>
             <div id="fireBtn" class="mobBtn">ATEŞ</div>
         </div>
@@ -104,6 +113,20 @@
         <button class="action-btn" id="startBtn">UYAN</button>
     </div>
 
+    <div id="pauseMenu" class="overlay" style="display: none; z-index: 200;">
+        <h1>OYUN DURAKLATILDI</h1>
+        <button class="action-btn" onclick="togglePause()">DEVAM ET</button>
+        <button class="action-btn" onclick="openShop()" style="border-color:#ffd700; color:#ffd700;">KARABORSA (MARKET)</button>
+        <button class="action-btn" onclick="location.reload()">YENİDEN BAŞLAT</button>
+    </div>
+
+    <div id="shopMenu" class="overlay" style="display: none; z-index: 210;">
+        <h1 style="color:#ffd700; text-shadow: 0 0 20px #ffd700;">KARABORSA</h1>
+        <p>Mevcut Koin: <span id="shopCoinCount" style="color:#fff; font-weight:bold; font-size:20px;">0</span></p>
+        <div id="shopCardsContainer"></div>
+        <button class="action-btn" onclick="closeShop()">GERİ DÖN</button>
+    </div>
+
     <div id="gameOverScreen" class="overlay" style="display: none;">
         <h1>EJDERHA DÜŞTÜ</h1>
         <p>Avlanan İblis: <span id="finalScore" style="color: #ffaa00; font-size: 22px;">0</span> | Ulaşılan Dalga: <span id="finalWave" style="color: #00ffcc;">1</span></p>
@@ -119,12 +142,12 @@
     <div id="ui">
         <h3>BÖRÜ (<span id="uiThemeName">Magma</span>)</h3>
         <p style="margin-top: 4px; margin-bottom: 4px;">Bölge: <span id="uiBiomeName" style="font-weight:bold; text-shadow: 0 0 8px currentColor;">Kadim Orman</span></p>
-        <p>Hareket: Fareyi merkezden uzaklaştır.</p>
         <p>Ateş: <span class="highlight" id="uiFireText" style="color:#ff3300;">SOL TIK BASILI TUT</span></p>
-        <p>Hayalet Modu: <span style="color: #fff; font-weight: bold;">SPACE BASILI TUT</span></p>
+        <p>Hayalet: <span style="color: #00ffff; font-weight: bold;">SPACE</span> | Kükreme: <span style="color: #ff9900; font-weight: bold;">E TUŞU</span></p>
     </div>
 
     <div id="stats">
+        <div style="margin-bottom: 5px;">Koin: <span id="coinCount" style="color:#ffd700; font-weight:bold; font-size:22px;">0</span></div>
         <div>Avlanan İblis: <span id="killCount" style="font-weight:bold;">0</span></div>
         <div style="font-size: 11px; margin-top:10px; color:#bbb; letter-spacing:1px; margin-bottom: 3px;">ÖFKE (RAGE)</div>
         <div id="rageBarContainer" class="bar-container"><div id="rageBar"></div></div>
@@ -150,6 +173,7 @@
         const canvas = document.getElementById('dragonCanvas');
         const ctx = canvas.getContext('2d');
         let gameActive = false;
+        let isPaused = false;
 
         function resizeCanvas() { canvas.width = window.innerWidth; canvas.height = window.innerHeight; }
         window.addEventListener('resize', resizeCanvas); resizeCanvas();
@@ -165,13 +189,14 @@
         const themes = {
             magma: { name: 'Magma', mainColor: '#ff3300', uiColor: '#ff3300', hueStart: 40, hueEnd: 0, rageBlueMode: true },
             ice: { name: 'Buz', mainColor: '#00ffff', uiColor: '#00ffff', hueStart: 200, hueEnd: 180, rageBlueMode: false },
-            poison: { name: 'Zehir', mainColor: '#33ff00', uiColor: '#33ff00', hueStart: 120, hueEnd: 90, rageBlueMode: false }
+            poison: { name: 'Zehir', mainColor: '#33ff00', uiColor: '#33ff00', hueStart: 120, hueEnd: 90, rageBlueMode: false },
+            void: { name: 'Hiçlik', mainColor: '#cc00ff', uiColor: '#cc00ff', hueStart: 280, hueEnd: 260, rageBlueMode: false }
         };
         let activeTheme = themes.magma;
         
         window.selectTheme = function(themeId) {
             document.querySelectorAll('.theme-card').forEach(c => c.classList.remove('active'));
-            document.querySelector('.theme-card.' + themeId).classList.add('active');
+            if(document.querySelector('.theme-card.' + themeId)) document.querySelector('.theme-card.' + themeId).classList.add('active');
             activeTheme = themes[themeId];
             document.getElementById('titleText').style.color = activeTheme.mainColor;
             document.getElementById('titleText').style.textShadow = `0 0 20px ${activeTheme.mainColor}`;
@@ -208,10 +233,58 @@
             if(isBoss) playTone(80, 'sawtooth', 0.15, 0.3, false);
             else playTone(150 + Math.random()*50, 'square', 0.1, 0.05, true);
         }
+        
         function playDeathSound(isBoss) {
             if(isBoss) playTone(50, 'square', 1.5, 0.6, true);
             else playTone(100, 'sawtooth', 0.2, 0.1, true);
         }
+
+        function playSahmeranHiss() {
+            if (!audioCtx || audioCtx.state === 'suspended') return;
+            const bufferSize = audioCtx.sampleRate * 2;
+            const buffer = audioCtx.createBuffer(1, bufferSize, audioCtx.sampleRate);
+            const data = buffer.getChannelData(0);
+            for (let i = 0; i < bufferSize; i++) data[i] = Math.random() * 2 - 1;
+            const noise = audioCtx.createBufferSource(); noise.buffer = buffer;
+            const filter = audioCtx.createBiquadFilter(); filter.type = 'bandpass'; filter.frequency.value = 2500; filter.Q.value = 2.0;
+            const gain = audioCtx.createGain(); gain.gain.setValueAtTime(0.6, audioCtx.currentTime); gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 2.0);
+            noise.connect(filter).connect(gain).connect(audioCtx.destination);
+            noise.start(); noise.stop(audioCtx.currentTime + 2.0);
+        }
+
+        function playAcidSound() {
+            playTone(1500, 'sawtooth', 0.4, 0.15, true);
+        }
+
+        function playWhipSound() {
+            playTone(150, 'square', 0.3, 0.5, true);
+        }
+
+        function playRoarSound() {
+            if (!audioCtx || audioCtx.state === 'suspended') return;
+            const osc1 = audioCtx.createOscillator();
+            const osc2 = audioCtx.createOscillator();
+            const gain = audioCtx.createGain();
+            
+            osc1.type = 'sawtooth';
+            osc1.frequency.setValueAtTime(100, audioCtx.currentTime);
+            osc1.frequency.exponentialRampToValueAtTime(10, audioCtx.currentTime + 1);
+            
+            osc2.type = 'square';
+            osc2.frequency.setValueAtTime(150, audioCtx.currentTime);
+            osc2.frequency.exponentialRampToValueAtTime(20, audioCtx.currentTime + 1);
+            
+            gain.gain.setValueAtTime(0.8, audioCtx.currentTime);
+            gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 1);
+            
+            osc1.connect(gain);
+            osc2.connect(gain);
+            gain.connect(audioCtx.destination);
+            
+            osc1.start(); osc1.stop(audioCtx.currentTime + 1);
+            osc2.start(); osc2.stop(audioCtx.currentTime + 1);
+        }
+
         function playMegaBossSpawnSound() {
             if (!audioCtx || audioCtx.state === 'suspended') return;
             const osc = audioCtx.createOscillator(); const gain = audioCtx.createGain();
@@ -236,21 +309,16 @@
             } else if(themeData.name === 'Zehir') {
                 if(isRage) { grad.addColorStop(0.2, '#cc00ff'); grad.addColorStop(0.6, 'rgba(100, 0, 255, 0.8)'); } 
                 else { grad.addColorStop(0.2, '#aaff00'); grad.addColorStop(0.6, 'rgba(50, 200, 0, 0.8)'); }
+            } else if(themeData.name === 'Hiçlik') {
+                if(isRage) { grad.addColorStop(0.2, '#ffffff'); grad.addColorStop(0.6, 'rgba(255, 0, 100, 0.8)'); } 
+                else { grad.addColorStop(0.2, '#ff00ff'); grad.addColorStop(0.6, 'rgba(100, 0, 255, 0.8)'); }
             }
             grad.addColorStop(1, 'rgba(0, 0, 0, 0)');
             pCtx.fillStyle = grad; pCtx.beginPath(); pCtx.arc(32, 32, 32, 0, Math.PI * 2); pCtx.fill(); return pCanv;
         };
 
-        document.getElementById('startBtn').addEventListener('click', () => {
-            if(audioCtx && audioCtx.state === 'suspended') audioCtx.resume();
+        function applyThemeColors() {
             fireSprite = createParticleSprite(activeTheme, false); rageFireSprite = createParticleSprite(activeTheme, true);
-            const pCanvS = document.createElement('canvas'); pCanvS.width=64; pCanvS.height=64; const pCtxS = pCanvS.getContext('2d');
-            const gradS = pCtxS.createRadialGradient(32,32,0,32,32,32); gradS.addColorStop(0, 'rgba(25, 20, 20, 0.8)'); gradS.addColorStop(1, 'rgba(15, 15, 15, 0)');
-            pCtxS.fillStyle = gradS; pCtxS.beginPath(); pCtxS.arc(32, 32, 32, 0, Math.PI * 2); pCtxS.fill(); smokeSprite = pCanvS;
-            const pCanvX = document.createElement('canvas'); pCanvX.width=64; pCanvX.height=64; const pCtxX = pCanvX.getContext('2d');
-            const gradX = pCtxX.createRadialGradient(32,32,0,32,32,32); gradX.addColorStop(0, '#ffffff'); gradX.addColorStop(0.3, '#00ffff'); gradX.addColorStop(1, 'rgba(0, 150, 255, 0)');
-            pCtxX.fillStyle = gradX; pCtxX.beginPath(); pCtxX.arc(32, 32, 32, 0, Math.PI * 2); pCtxX.fill(); xpSprite = pCanvX;
-
             document.getElementById('hpBarContainer').style.borderColor = activeTheme.mainColor;
             document.getElementById('hpBar').style.background = activeTheme.mainColor;
             document.getElementById('hpHeartFill').style.color = activeTheme.mainColor;
@@ -259,8 +327,20 @@
             document.getElementById('uiFireText').style.color = activeTheme.mainColor;
             document.getElementById('killCount').style.color = activeTheme.mainColor;
             document.getElementById('waveAnnouncer').style.color = activeTheme.mainColor;
-            
+        }
+
+        document.getElementById('startBtn').addEventListener('click', () => {
+            if(audioCtx && audioCtx.state === 'suspended') audioCtx.resume();
+            applyThemeColors();
+            const pCanvS = document.createElement('canvas'); pCanvS.width=64; pCanvS.height=64; const pCtxS = pCanvS.getContext('2d');
+            const gradS = pCtxS.createRadialGradient(32,32,0,32,32,32); gradS.addColorStop(0, 'rgba(25, 20, 20, 0.8)'); gradS.addColorStop(1, 'rgba(15, 15, 15, 0)');
+            pCtxS.fillStyle = gradS; pCtxS.beginPath(); pCtxS.arc(32, 32, 32, 0, Math.PI * 2); pCtxS.fill(); smokeSprite = pCanvS;
+            const pCanvX = document.createElement('canvas'); pCanvX.width=64; pCanvX.height=64; const pCtxX = pCanvX.getContext('2d');
+            const gradX = pCtxX.createRadialGradient(32,32,0,32,32,32); gradX.addColorStop(0, '#ffffff'); gradX.addColorStop(0.3, '#00ffff'); gradX.addColorStop(1, 'rgba(0, 150, 255, 0)');
+            pCtxX.fillStyle = gradX; pCtxX.beginPath(); pCtxX.arc(32, 32, 32, 0, Math.PI * 2); pCtxX.fill(); xpSprite = pCanvX;
+
             document.getElementById('startScreen').style.display = 'none';
+            document.getElementById('topControls').style.display = 'block';
             initAudio(); gameActive = true; animate(); showWaveText("DALGA 1");
         });
 
@@ -268,14 +348,88 @@
         let isBreathingFire = false; let spacePressed = false;
         let score = 0; let dragonHp = 3000; let maxHp = 3000;
         let rage = 0; let isRageActive = false; let rageTimer = 0;
+        
+        let playerSlowed = 0; 
+        let playerRageBlocked = 0;
+
         let boss = null; let bossDefeatedThisWave = false;
         let currentWave = 1; let killsInCurrentWave = 0; const killsNeededForNextWave = 25;
         let level = 1; let currentXp = 0; let maxXp = 10;
+        let coins = 0;
+        let roarCooldown = 0;
+        let roars = [];
+
+        let shopUnlocks = { bigWings: false, demonHorns: false, voidTheme: false };
 
         const xpGems = []; const fireParticles = []; const enemies = []; const projectiles = []; const trailParticles = [];
         const passives = []; const biomeParticles = []; const healParticles = [];
+        
+        const sahmeranProjectiles = []; 
+        const poisonPools = [];
+
         let lastBiomeDisplayName = "";
         let tick = 0; const gridSize = 120;
+
+        function triggerRoar() {
+            if(roarCooldown > 0) return;
+            roarCooldown = 150; 
+            roars.push({
+                x: joints[0].x, y: joints[0].y,
+                angle: joints[0].angle,
+                radius: 20, life: 1.0
+            });
+            playRoarSound();
+            applyShake(25);
+        }
+
+        window.togglePause = function() {
+            isPaused = !isPaused;
+            if (isPaused) {
+                document.getElementById('pauseMenu').style.display = 'flex';
+                document.getElementById('shopMenu').style.display = 'none';
+            } else {
+                document.getElementById('pauseMenu').style.display = 'none';
+                document.getElementById('shopMenu').style.display = 'none';
+            }
+        };
+        
+        window.openShop = function() {
+            document.getElementById('pauseMenu').style.display = 'none';
+            document.getElementById('shopMenu').style.display = 'flex';
+            document.getElementById('shopCoinCount').innerText = coins;
+            renderShop();
+        };
+
+        window.closeShop = function() {
+            document.getElementById('shopMenu').style.display = 'none';
+            document.getElementById('pauseMenu').style.display = 'flex';
+        };
+
+        window.buyItem = function(item, cost) {
+            if(coins >= cost && !shopUnlocks[item]) {
+                coins -= cost;
+                shopUnlocks[item] = true;
+                document.getElementById('coinCount').innerText = coins;
+                document.getElementById('shopCoinCount').innerText = coins;
+                if(item === 'voidTheme') { selectTheme('void'); applyThemeColors(); }
+                renderShop();
+            }
+        };
+
+        function renderShop() {
+            const c = document.getElementById('shopCardsContainer');
+            c.innerHTML = `
+                <div class="upgrade-card" onclick="buyItem('bigWings', 150)" style="opacity: ${shopUnlocks.bigWings ? '0.3' : '1'}; border-color:#ffd700;">
+                    <div style="font-size:40px;">🦇</div><h3 style="color:#fff;">Devasa Kanatlar</h3><p style="color:#ffd700;">150 Koin</p><p style="font-size:12px; color:#aaa; margin-top:5px;">Kanat açıklığını artırır.</p>
+                </div>
+                <div class="upgrade-card" onclick="buyItem('demonHorns', 250)" style="opacity: ${shopUnlocks.demonHorns ? '0.3' : '1'}; border-color:#ffd700;">
+                    <div style="font-size:40px;">😈</div><h3 style="color:#fff;">İblis Boynuzları</h3><p style="color:#ffd700;">250 Koin</p><p style="font-size:12px; color:#aaa; margin-top:5px;">Kafanda dehşet verici boynuzlar çıkar.</p>
+                </div>
+                <div class="upgrade-card" onclick="buyItem('voidTheme', 500)" style="opacity: ${shopUnlocks.voidTheme ? '0.3' : '1'}; border-color:#cc00ff;">
+                    <div style="font-size:40px;">🌌</div><h3 style="color:#fff;">Hiçlik Ruhu</h3><p style="color:#ffd700;">500 Koin</p><p style="font-size:12px; color:#aaa; margin-top:5px;">Rengini hiçlik moruna dönüştürür.</p>
+                </div>
+            `;
+        }
 
         let isJoyActive = false;
         const joyZone = document.getElementById('joystickZone');
@@ -301,10 +455,11 @@
             mouseScreenY = (canvas.height / 2) + Math.sin(angle) * (dist/40) * 300;
         }
 
-        document.getElementById('fireBtn').addEventListener('touchstart', (e) => { e.preventDefault(); isBreathingFire = true; });
+        document.getElementById('fireBtn').addEventListener('touchstart', (e) => { e.preventDefault(); if(!isPaused) isBreathingFire = true; });
         document.getElementById('fireBtn').addEventListener('touchend', (e) => { e.preventDefault(); isBreathingFire = false; });
-        document.getElementById('ghostBtn').addEventListener('touchstart', (e) => { e.preventDefault(); spacePressed = true; document.getElementById('ghostIndicator').style.display = 'block'; });
+        document.getElementById('ghostBtn').addEventListener('touchstart', (e) => { e.preventDefault(); if(!isPaused) {spacePressed = true; document.getElementById('ghostIndicator').style.display = 'block';} });
         document.getElementById('ghostBtn').addEventListener('touchend', (e) => { e.preventDefault(); spacePressed = false; document.getElementById('ghostIndicator').style.display = 'none'; });
+        document.getElementById('roarBtn').addEventListener('touchstart', (e) => { e.preventDefault(); if(!isPaused) triggerRoar(); });
 
         const biomeNodes = [
             { name: 'orman', x: 0, y: 0, displayName: 'Kadim Orman', color: '#021107', gridColor: '#1faa43' },
@@ -326,19 +481,25 @@
             return closest;
         }
 
-        // YENİ: Hasar Düşürüldü, Bufflar Temizlendi
+        // --- OPTİMİZASYON: Hasar Çarpanı artırıldı! (0.8 -> 1.5) ---
         const stats = { 
-            baseMaxSpeed: 16, fireVolume: 4, fireDamage: 1.5, // 3'ten 1.5'e düştü
+            baseMaxSpeed: 16, fireVolume: 4, fireDamage: 1.5,
             lifeStealChance: 0, rageEfficiency: 1, 
             fireSizeMult: 1, critChance: 0, trailDamage: false 
         };
         const world = { dragonX: 0, dragonY: 0, lastX: 0, lastY: 0, speed: 0, comfortZone: 150, deadZone: 10 };
 
-        window.addEventListener('mousemove', (e) => { if(!isJoyActive){ mouseScreenX = e.clientX; mouseScreenY = e.clientY; }});
-        window.addEventListener('pointerdown', (e) => { if(gameActive && e.pointerType === "mouse") isBreathingFire = true; });
-        window.addEventListener('pointerup', (e) => { if(e.pointerType === "mouse") isBreathingFire = false; });
-        window.addEventListener('pointerleave', () => { isBreathingFire = false; });
-        window.addEventListener('keydown', (e) => { if (e.code === 'Space' && gameActive) { spacePressed = true; document.getElementById('ghostIndicator').style.display = 'block'; } });
+        window.addEventListener('mousemove', (e) => { if(!isJoyActive && !isPaused){ mouseScreenX = e.clientX; mouseScreenY = e.clientY; }});
+        window.addEventListener('mousedown', (e) => { if(gameActive && !isPaused) isBreathingFire = true; });
+        window.addEventListener('mouseup', () => { isBreathingFire = false; });
+        window.addEventListener('touchstart', (e) => { if(gameActive && !isPaused && e.target.tagName === 'CANVAS') isBreathingFire = true; }, {passive: false});
+        window.addEventListener('touchend', () => { isBreathingFire = false; });
+
+        window.addEventListener('keydown', (e) => { 
+            if (e.code === 'Escape' && gameActive && document.getElementById('levelUpScreen').style.display === 'none') togglePause();
+            if (e.code === 'KeyE' && gameActive && !isPaused) triggerRoar();
+            if (e.code === 'Space' && gameActive && !isPaused) { spacePressed = true; document.getElementById('ghostIndicator').style.display = 'block'; } 
+        });
         window.addEventListener('keyup', (e) => { if (e.code === 'Space') { spacePressed = false; document.getElementById('ghostIndicator').style.display = 'none'; } });
 
         const numSegments = 30; const segmentLength = 16; const joints = [];
@@ -380,6 +541,13 @@
             applyShake(15);
         }
 
+        function showWaveText(text, isBoss = false, color = null) {
+            const w = document.getElementById('waveAnnouncer');
+            w.innerText = text; w.style.opacity = '1';
+            w.style.color = color ? color : (isBoss ? '#ff0055' : 'white');
+            setTimeout(() => { w.style.opacity = '0'; }, 3000);
+        }
+
         window.selectUpgrade = function(id) {
             if (id === 'fire') stats.fireVolume += 2;
             if (id === 'hp') { maxHp += 500; dragonHp = maxHp; updateUI(); }
@@ -400,7 +568,11 @@
             const wj = joints[jointIndex]; const wx = wj.x - camX; const wy = wj.y - camY;
             const flapSpeed = isBreathingFire ? tick * 2.5 : (spacePressed ? tick * 3 : tick);
             const flap = Math.sin(flapSpeed + flapOffset) * (isBreathingFire ? 0.6 : 0.4); 
-            ctx.save(); ctx.translate(wx, wy); ctx.rotate(wj.angle); ctx.scale(scale, scale);
+            ctx.save(); ctx.translate(wx, wy); ctx.rotate(wj.angle); 
+            
+            let finalScale = scale * (shopUnlocks.bigWings ? 1.5 : 1.0);
+            ctx.scale(finalScale, finalScale);
+            
             const wingH = isRageActive ? (activeTheme.rageBlueMode ? 220 : 280) : activeTheme.hueStart;
             ctx.fillStyle = `hsla(${wingH}, 100%, 50%, 0.15)`; ctx.strokeStyle = `hsla(${wingH}, 100%, 50%, 0.8)`; ctx.lineWidth = 2.5;
             ctx.save(); ctx.rotate(flap); drawScytheWing(ctx, -1); ctx.restore();
@@ -409,6 +581,15 @@
 
         function drawDragonHead(ctx, glowColor, armorColor, isMain = true) {
             ctx.fillStyle = armorColor; ctx.strokeStyle = glowColor; ctx.lineWidth = 2.5;
+            
+            if (shopUnlocks.demonHorns && isMain) {
+                ctx.beginPath();
+                ctx.moveTo(-15, -10); ctx.quadraticCurveTo(-30, -60, -80, -40);
+                ctx.moveTo(-15, 10); ctx.quadraticCurveTo(-30, 60, -80, 40);
+                ctx.strokeStyle = '#ff0000'; ctx.lineWidth = 4; ctx.stroke();
+                ctx.strokeStyle = glowColor; ctx.lineWidth = 2.5; 
+            }
+
             ctx.beginPath();
             ctx.moveTo(-5, -10); 
             ctx.bezierCurveTo(-20, -30, -10, -55, -45, -75);
@@ -422,18 +603,59 @@
             ctx.beginPath(); 
             ctx.moveTo(35, 0); ctx.lineTo(15, -8); ctx.lineTo(-5, -12); ctx.lineTo(-20, -18); ctx.lineTo(-12, 0); ctx.lineTo(-20, 18); ctx.lineTo(-5, 12); ctx.lineTo(15, 8);    
             ctx.closePath(); ctx.fill(); ctx.stroke();
-            ctx.fillStyle = '#ffffff'; ctx.shadowColor = glowColor; ctx.shadowBlur = isMain ? 15 : 5;
+            ctx.fillStyle = '#ffffff'; ctx.shadowColor = glowColor; 
+            ctx.shadowBlur = isMain ? 10 : 0; // --- Optimizasyon: Gölge azaltıldı ---
             ctx.beginPath(); ctx.moveTo(18, -4); ctx.lineTo(10, -9); ctx.lineTo(12, -2); ctx.fill(); 
             ctx.beginPath(); ctx.moveTo(18, 4); ctx.lineTo(10, 9); ctx.lineTo(12, 2); ctx.fill();
         }
 
-        function showWaveText(text, isBoss = false, customColor = null) {
-            const el = document.getElementById('waveAnnouncer'); el.innerText = text; el.style.opacity = 1; el.style.color = customColor || (isBoss ? '#ff0055' : activeTheme.mainColor);
-            if(isBoss) playTone(50, 'square', 2.0, 0.5); else playTone(100, 'sawtooth', 1.5, 0.3);
-            setTimeout(() => { el.style.opacity = 0; }, 3000);
+        function drawSahmeranBoss(b, isHit, angle) {
+            for (let i = 19; i > 0; i--) {
+                const j = b.joints[i];
+                ctx.save(); ctx.translate(j.x - camX, j.y - camY); ctx.rotate(j.angle);
+                ctx.fillStyle = isHit ? '#ffffff' : '#0a1a0a';
+                ctx.strokeStyle = '#052b05'; ctx.lineWidth = 2;
+                let s = Math.max(8, 35 - i * 1.5);
+                ctx.beginPath(); ctx.ellipse(0, 0, s, s * 0.7, 0, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
+                
+                ctx.fillStyle = '#114411';
+                ctx.beginPath(); ctx.moveTo(0, 0); ctx.lineTo(-s*0.5, -s*0.3); ctx.lineTo(-s*0.8, 0); ctx.lineTo(-s*0.5, s*0.3); ctx.fill();
+                ctx.restore();
+            }
+
+            ctx.save(); ctx.translate(b.x - camX, b.y - camY); ctx.rotate(angle);
+            ctx.fillStyle = isHit ? '#ffffff' : '#001a05';
+            
+            ctx.beginPath(); ctx.moveTo(0, -25); ctx.quadraticCurveTo(40, -40, 50, 0); ctx.quadraticCurveTo(40, 40, 0, 25); ctx.fill();
+            
+            ctx.translate(45, 0);
+            ctx.fillStyle = isHit ? '#ffffff' : '#050a05';
+            ctx.beginPath(); ctx.moveTo(0, -20); ctx.quadraticCurveTo(30, -15, 35, 0); ctx.quadraticCurveTo(30, 15, 0, 20); ctx.fill();
+            
+            ctx.strokeStyle = '#003300'; ctx.lineWidth = 4;
+            ctx.beginPath(); ctx.moveTo(0, -15); ctx.quadraticCurveTo(-20, -30, -35, -20); ctx.stroke();
+            ctx.beginPath(); ctx.moveTo(0, 15); ctx.quadraticCurveTo(-20, 30, -35, 20); ctx.stroke();
+            
+            ctx.fillStyle = '#ffcc00'; ctx.shadowBlur = 10; ctx.shadowColor = '#ffcc00';
+            ctx.beginPath(); ctx.ellipse(15, -8, 7, 3, Math.PI / 8, 0, Math.PI * 2); ctx.fill();
+            ctx.beginPath(); ctx.ellipse(15, 8, 7, 3, -Math.PI / 8, 0, Math.PI * 2); ctx.fill();
+            
+            ctx.shadowBlur = 0; ctx.fillStyle = '#dddddd';
+            ctx.beginPath(); ctx.moveTo(28, -3); ctx.lineTo(34, -1); ctx.lineTo(29, 2); ctx.fill();
+            ctx.beginPath(); ctx.moveTo(28, 3); ctx.lineTo(34, 1); ctx.lineTo(29, -2); ctx.fill();
+            
+            ctx.translate(-45, 0);
+            ctx.strokeStyle = '#0a2a0a'; ctx.lineWidth = 10; ctx.lineCap = 'round';
+            const armSwing = Math.sin(tick * 2) * 0.4;
+            ctx.beginPath(); ctx.moveTo(-10, -20); ctx.quadraticCurveTo(-5 + armSwing * 20, -50, 25, -40); ctx.stroke();
+            ctx.fillStyle = '#ff0000'; ctx.beginPath(); ctx.arc(25, -40, 5, 0, Math.PI*2); ctx.fill(); 
+            
+            ctx.beginPath(); ctx.moveTo(-10, 20); ctx.quadraticCurveTo(-5 - armSwing * 20, 50, 25, 40); ctx.stroke();
+            ctx.fillStyle = '#ff0000'; ctx.beginPath(); ctx.arc(25, 40, 5, 0, Math.PI*2); ctx.fill();
+            
+            ctx.restore();
         }
 
-        // YENİ: Normal Boss Çizim Fonksiyonu (Yeniden Kullanılabilir)
         function drawSerpentBoss(b, color, glowColor, isHit, overrideAngle = null) {
             for (let i = 14; i > 0; i--) {
                 const j = b.joints[i];
@@ -454,7 +676,8 @@
             const angleToTarget = overrideAngle !== null ? overrideAngle : b.joints[0].angle;
             const bx = b.x - camX; const by = b.y - camY;
             ctx.save(); ctx.translate(bx, by); ctx.rotate(angleToTarget); 
-            ctx.fillStyle = isHit ? '#ffffff' : '#050011'; ctx.strokeStyle = color; ctx.lineWidth = 4; ctx.shadowBlur = 40; ctx.shadowColor = glowColor;
+            ctx.fillStyle = isHit ? '#ffffff' : '#050011'; ctx.strokeStyle = color; ctx.lineWidth = 4; 
+            ctx.shadowBlur = 15; ctx.shadowColor = glowColor; // --- Optimizasyon: Gölge 40'tan 15'e düşürüldü ---
             const pulse = Math.sin(tick * 4) * 10; const armSwing = Math.sin(tick * 2) * 0.5;
             ctx.save(); ctx.rotate(armSwing); ctx.beginPath(); ctx.moveTo(0, 0); ctx.quadraticCurveTo(80, -100, 150, -40); ctx.lineTo(180, -120); ctx.lineTo(100, -20); ctx.fill(); ctx.stroke(); ctx.restore();
             ctx.save(); ctx.rotate(-armSwing); ctx.beginPath(); ctx.moveTo(0, 0); ctx.quadraticCurveTo(80, 100, 150, 40); ctx.lineTo(180, 120); ctx.lineTo(100, 20); ctx.fill(); ctx.stroke(); ctx.restore();
@@ -462,7 +685,79 @@
             ctx.fillStyle = color; ctx.beginPath(); ctx.arc(10, 0, 15 + pulse, 0, Math.PI * 2); ctx.fill(); ctx.restore();
         }
 
-        // YENİ: Mega Boss Doğurma (Karanlık İlah ve Köleleri)
+        function drawBossIndicator(b) {
+            let dx = b.x - world.dragonX;
+            let dy = b.y - world.dragonY;
+            let dist = Math.hypot(dx, dy);
+            
+            if (dist > Math.max(canvas.width, canvas.height) * 0.45) {
+                let angle = Math.atan2(dy, dx);
+                let cx = canvas.width / 2;
+                let cy = canvas.height / 2;
+                let r = Math.min(cx, cy) - 60; 
+                
+                let indX = cx + Math.cos(angle) * r;
+                let indY = cy + Math.sin(angle) * r;
+                
+                ctx.save();
+                ctx.translate(indX, indY);
+                ctx.rotate(angle);
+                
+                let bColor = '#ff0055';
+                if(b.type === 'mega') bColor = '#cc00ff';
+                if(b.type === 'sahmeran') bColor = '#33ff00';
+                
+                ctx.fillStyle = bColor;
+                ctx.shadowBlur = 10; // --- Optimizasyon: Gölge azaltıldı ---
+                ctx.shadowColor = bColor;
+                
+                ctx.beginPath();
+                ctx.moveTo(25, 0);
+                ctx.lineTo(-15, -15);
+                ctx.lineTo(-5, 0);
+                ctx.lineTo(-15, 15);
+                ctx.closePath();
+                ctx.fill();
+                
+                ctx.strokeStyle = 'rgba(255, 255, 255, 0.5)';
+                ctx.lineWidth = 2;
+                ctx.beginPath();
+                ctx.arc(0, 0, 30, 0, Math.PI*2);
+                ctx.stroke();
+                
+                ctx.rotate(-angle);
+                ctx.fillStyle = '#fff';
+                ctx.font = 'bold 12px Arial';
+                ctx.textAlign = 'center';
+                ctx.textBaseline = 'middle';
+                ctx.shadowBlur = 0;
+                ctx.fillText(Math.floor(dist) + 'm', 0, 45); 
+                
+                ctx.restore();
+            }
+        }
+
+        function spawnSahmeran() {
+            const angle = Math.random() * Math.PI * 2; const dist = Math.max(canvas.width, canvas.height) + 500;
+            boss = {
+                type: 'sahmeran',
+                x: world.dragonX + Math.cos(angle) * dist,
+                y: world.dragonY + Math.sin(angle) * dist,
+                maxHp: 40000 * (currentWave / 6), hp: 40000 * (currentWave / 6),
+                size: 90, speed: stats.baseMaxSpeed * 0.85, wobble: 0,
+                attackCooldown: 0, spitCooldown: 150, intimidateCooldown: 400,
+                joints: Array.from({length: 20}, () => ({x: 0, y: 0, angle: 0}))
+            };
+            document.getElementById('bossUi').style.display = 'block';
+            document.getElementById('bossName').innerText = "ŞAHMERAN";
+            document.getElementById('bossName').style.color = "#33ff00";
+            document.getElementById('bossHpBar').style.background = "#33ff00";
+            document.getElementById('bossHpContainer').style.borderColor = "#33ff00";
+            showWaveText("ŞAHMERAN UYANDI", true, "#33ff00");
+            document.getElementById('screenOverlay').classList.add('sahmeran-active');
+            playSahmeranHiss(); applyShake(60);
+        }
+
         function spawnMegaBoss() {
             const angle = Math.random() * Math.PI * 2; const dist = Math.max(canvas.width, canvas.height) + 500;
             let bx = world.dragonX + Math.cos(angle) * dist;
@@ -473,15 +768,13 @@
                 type: 'mega', x: bx, y: by,
                 maxHp: 100000 * waveMult, hp: 100000 * waveMult,
                 size: 140, speed: stats.baseMaxSpeed * 0.25, wobble: 0, attackCooldown: 0,
-                isAggro: false,
-                minions: []
+                isAggro: false, minions: []
             };
 
             for(let i=0; i<2; i++) {
                 let mx = bx + Math.cos(i * Math.PI) * 200; let my = by + Math.sin(i * Math.PI) * 200;
                 boss.minions.push({
-                    x: mx, y: my,
-                    maxHp: 25000 * waveMult, hp: 25000 * waveMult,
+                    x: mx, y: my, maxHp: 25000 * waveMult, hp: 25000 * waveMult,
                     size: 80, speed: stats.baseMaxSpeed * 0.6, wobble: Math.random() * Math.PI, attackCooldown: 0,
                     joints: Array.from({length: 15}, () => ({x: mx, y: my, angle: 0}))
                 });
@@ -514,23 +807,17 @@
         }
 
         function spawnEnemy() {
-            if (!gameActive) return;
+            if (!gameActive || isPaused) return;
             
-            // Boss Dalgaları (10. Dalga = Mega, 3, 6, 9 vb. = Normal)
-            if (currentWave % 10 === 0 && !bossDefeatedThisWave) {
-                if (!boss && enemies.length === 0) spawnMegaBoss(); return;
-            }
-            if (currentWave % 3 === 0 && currentWave % 10 !== 0 && !bossDefeatedThisWave) { 
-                if (!boss && enemies.length === 0) spawnNormalBoss(); return; 
-            }
+            if (currentWave % 10 === 0 && !bossDefeatedThisWave) { if (!boss && enemies.length === 0) spawnMegaBoss(); return; }
+            if (currentWave % 6 === 0 && currentWave % 10 !== 0 && !bossDefeatedThisWave) { if (!boss && enemies.length === 0) spawnSahmeran(); return; }
+            if (currentWave % 3 === 0 && currentWave % 10 !== 0 && currentWave % 6 !== 0 && !bossDefeatedThisWave) { if (!boss && enemies.length === 0) spawnNormalBoss(); return; }
             
-            if(enemies.length > 35) return;
+            if(enemies.length > 25) return;
             const angle = Math.random() * Math.PI * 2; const dist = Math.max(canvas.width, canvas.height) + 150;
             const hpMultiplier = 1 + (currentWave * 0.2); const speedMultiplier = 1 + (currentWave * 0.1);
-            
             const types = ['bat', 'scorpion', 'kobra', 'beetle'];
             const type = types[Math.floor(Math.random() * types.length)];
-            
             let eSize = 20, eSpeed = 4, eHp = 40;
             if(type === 'bat') { eSize = 18; eSpeed = 5; }
             if(type === 'scorpion') { eSize = 25; eSpeed = 3; eHp = 60; }
@@ -542,12 +829,9 @@
         setInterval(spawnEnemy, 1000);
 
         function spawnPassiveUnit() {
-            if (!gameActive || passives.length > 10) return;
+            if (!gameActive || isPaused || passives.length > 10) return;
             const angle = Math.random() * Math.PI * 2; const dist = Math.max(canvas.width, canvas.height) + 120;
-            passives.push({
-                x: world.dragonX + Math.cos(angle) * dist, y: world.dragonY + Math.sin(angle) * dist,
-                hp: 15, maxHp: 15, size: 14, speed: 3, wobble: Math.random() * Math.PI * 2, isHit: false
-            });
+            passives.push({ x: world.dragonX + Math.cos(angle) * dist, y: world.dragonY + Math.sin(angle) * dist, hp: 15, maxHp: 15, size: 14, speed: 3, wobble: Math.random() * Math.PI * 2, isHit: false });
         }
         setInterval(spawnPassiveUnit, 2500);
 
@@ -558,8 +842,8 @@
         }
 
         function addRage(amount) {
-            if(isRageActive) return;
-            rage = Math.min(100, rage + (amount * stats.rageEfficiency));
+            if(isRageActive || playerRageBlocked > 0) return;
+            rage = Math.min(100, rage + ((amount / 5) * stats.rageEfficiency));
             document.getElementById('rageBar').style.width = rage + '%';
             if(rage >= 100) activateRage();
         }
@@ -581,8 +865,12 @@
 
         function animate() {
             if (!gameActive) return;
+            if (isPaused) { requestAnimationFrame(animate); return; }
             tick += 0.08;
             
+            if (playerSlowed > 0) playerSlowed--;
+            if (playerRageBlocked > 0) playerRageBlocked--;
+
             let currentBiome = getBiomeAt(world.dragonX, world.dragonY);
             if(currentBiome.displayName !== lastBiomeDisplayName) {
                 lastBiomeDisplayName = currentBiome.displayName;
@@ -600,7 +888,8 @@
             }
 
             const sizeMultiplier = spacePressed ? 0.5 : 1.0;
-            const currentMaxSpeed = stats.baseMaxSpeed * (spacePressed ? 1.5 : 1.0) * (isRageActive ? 1.2 : 1.0);
+            let slowMultiplier = playerSlowed > 0 ? 0.5 : 1.0;
+            const currentMaxSpeed = stats.baseMaxSpeed * (spacePressed ? 1.5 : 1.0) * (isRageActive ? 1.2 : 1.0) * slowMultiplier;
             const screenDx = mouseScreenX - canvas.width / 2; const screenDy = mouseScreenY - canvas.height / 2;
             const distFromCenter = Math.hypot(screenDx, screenDy);
 
@@ -610,7 +899,7 @@
                 world.dragonX += (screenDx / distFromCenter) * cSpeed; world.dragonY += (screenDy / distFromCenter) * cSpeed; world.speed = cSpeed;
             } else { world.speed = 0; }
 
-            if (audioCtx) {
+            if (audioCtx && audioCtx.state !== 'suspended') {
                 windFilter.frequency.value = 150 + (world.speed * 25) + (spacePressed ? 400 : 0); windGain.gain.value = Math.min(0.8, world.speed / 24);
                 if (isBreathingFire && !spacePressed) { fireGain.gain.value = Math.min(0.6, fireGain.gain.value + 0.1); fireFilter.frequency.value = (isRageActive ? 900 : 600) + Math.random() * 300; } 
                 else fireGain.gain.value = Math.max(0, fireGain.gain.value - 0.08);
@@ -618,13 +907,13 @@
 
             const head = joints[0]; const dragonVx = world.dragonX - world.lastX; const dragonVy = world.dragonY - world.lastY;
 
-            if (isBreathingFire && !spacePressed && fireParticles.length < (isRageActive ? 500 : 350)) {
+            if (isBreathingFire && !spacePressed && fireParticles.length < (isRageActive ? 200 : 100)) {
                 let activeVolume = stats.fireVolume * (isRageActive ? 2 : 1);
                 for (let i = 0; i < activeVolume; i++) {
-                    const spread = (Math.random() - 0.5) * 0.45; const fSpeed = Math.random() * 12 + 14;
+                    const spread = (Math.random() - 0.5) * 0.45; const fSpeed = Math.random() * 8 + 6; 
                     fireParticles.push({ 
                         x: head.x + Math.cos(head.angle) * (35 * sizeMultiplier), y: head.y + Math.sin(head.angle) * (35 * sizeMultiplier), vx: Math.cos(head.angle + spread) * fSpeed + dragonVx * 0.7, vy: Math.sin(head.angle + spread) * fSpeed + dragonVy * 0.7, 
-                        life: 1.0, decay: Math.random() * 0.018 + 0.012, size: (Math.random() * 12 + 10) * stats.fireSizeMult, growth: Math.random() * 2.5 + 1.5, isBlue: isRageActive 
+                        life: 1.0, decay: Math.random() * 0.03 + 0.02, size: (Math.random() * 16 + 14) * stats.fireSizeMult, growth: Math.random() * 2.5 + 1.5, isBlue: isRageActive 
                     });
                 }
             }
@@ -638,6 +927,12 @@
             camX = world.dragonX - canvas.width / 2 + currentShakeX; camY = world.dragonY - canvas.height / 2 + currentShakeY;
 
             ctx.fillStyle = currentBiome.color; ctx.fillRect(0, 0, canvas.width, canvas.height);
+            
+            if (boss && boss.type === 'sahmeran') {
+                ctx.fillStyle = 'rgba(0, 15, 5, 0.4)';
+                ctx.fillRect(0, 0, canvas.width, canvas.height);
+            }
+
             const startX = Math.floor(camX / gridSize) * gridSize; const startY = Math.floor(camY / gridSize) * gridSize;
             for (let x = startX; x < startX + canvas.width + gridSize * 2; x += gridSize) {
                 ctx.beginPath(); let gridBiome = getBiomeAt(x, world.dragonY); ctx.strokeStyle = gridBiome.gridColor + "14"; ctx.lineWidth = 1; ctx.moveTo(x - camX, 0); ctx.lineTo(x - camX, canvas.height); ctx.stroke();
@@ -646,7 +941,7 @@
                 ctx.beginPath(); let gridBiome = getBiomeAt(world.dragonX, y); ctx.strokeStyle = gridBiome.gridColor + "14"; ctx.lineWidth = 1; ctx.moveTo(0, y - camY); ctx.lineTo(canvas.width, y - camY); ctx.stroke();
             }
 
-            if (biomeParticles.length < 160) {
+            if (biomeParticles.length < 80) {
                 let fromTop = Math.random() > 0.4;
                 biomeParticles.push({ x: fromTop ? (Math.random() * canvas.width + camX) : (camX + canvas.width + 40), y: fromTop ? (camY - 40) : (Math.random() * canvas.height + camY), vx: 0, vy: 0, size: Math.random() * 3 + 1, life: 1.0, wobble: Math.random() * Math.PI, type: currentBiome.name });
             }
@@ -670,9 +965,31 @@
                     continue;
                 }
                 if (p.x < world.dragonX - 1000 || p.x > world.dragonX + 1000 || p.y < world.dragonY - 1000 || p.y > world.dragonY + 1000) { projectiles.splice(i,1); continue; }
-                ctx.fillStyle = '#33ff00'; ctx.shadowBlur = 10; ctx.shadowColor = '#33ff00'; ctx.beginPath(); ctx.arc(p.x - camX, p.y - camY, p.size, 0, Math.PI*2); ctx.fill();
+                ctx.fillStyle = '#33ff00'; ctx.beginPath(); ctx.arc(p.x - camX, p.y - camY, p.size, 0, Math.PI*2); ctx.fill();
             }
-            ctx.shadowBlur = 0;
+
+            for (let i = sahmeranProjectiles.length - 1; i >= 0; i--) {
+                let p = sahmeranProjectiles[i];
+                p.progress += p.speed;
+                let currentX = p.x + (p.targetX - p.x) * p.progress;
+                let currentY = p.y + (p.targetY - p.y) * p.progress;
+                ctx.fillStyle = '#33ff00'; ctx.beginPath(); ctx.arc(currentX - camX, currentY - camY, 15, 0, Math.PI*2); ctx.fill();
+                if (p.progress >= 1) {
+                    poisonPools.push({x: p.targetX, y: p.targetY, life: 300, radius: 100});
+                    sahmeranProjectiles.splice(i, 1);
+                }
+            }
+
+            for(let i = poisonPools.length - 1; i >= 0; i--) {
+                let pool = poisonPools[i];
+                pool.life--;
+                ctx.fillStyle = `rgba(50, 255, 0, ${ (pool.life / 300) * 0.4 })`;
+                ctx.beginPath(); ctx.arc(pool.x - camX, pool.y - camY, pool.radius, 0, Math.PI*2); ctx.fill();
+                if ((world.dragonX - pool.x)**2 + (world.dragonY - pool.y)**2 < pool.radius**2 && !spacePressed) {
+                    if (tick % 5 < 0.5) { dragonHp -= 4; updateUI(); applyShake(3); }
+                }
+                if (pool.life <= 0) poisonPools.splice(i, 1);
+            }
 
             for (let i = passives.length - 1; i >= 0; i--) {
                 let pas = passives[i]; pas.wobble += 0.03;
@@ -687,11 +1004,14 @@
                 for (let tp of trailParticles) { if (tp.life > 0 && (pas.x - tp.x)**2 + (pas.y - tp.y)**2 < (pas.size + tp.size)**2) { pas.hp -= stats.fireDamage * 0.5; pas.isHit = true; } }
 
                 if (pas.hp <= 0) {
+                    coins += 1; document.getElementById('coinCount').innerText = coins; 
                     for(let k = 0; k < 4; k++) healParticles.push({ x: pas.x + (Math.random()-0.5)*15, y: pas.y + (Math.random()-0.5)*15, size: 7 + Math.random()*3 });
                     passives.splice(i, 1); continue;
                 }
                 let px = pas.x - camX; let py = pas.y - camY;
-                ctx.save(); ctx.translate(px, py); ctx.fillStyle = pas.isHit ? "#ffffff" : "rgba(0, 255, 190, 0.25)"; ctx.strokeStyle = "#00ffcc"; ctx.lineWidth = 2; ctx.shadowBlur = 15; ctx.shadowColor = "#00ffcc"; ctx.beginPath(); ctx.arc(0, 0, pas.size, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
+                ctx.save(); ctx.translate(px, py); ctx.fillStyle = pas.isHit ? "#ffffff" : "rgba(0, 255, 190, 0.25)"; ctx.strokeStyle = "#00ffcc"; ctx.lineWidth = 2; 
+                ctx.shadowBlur = 0; 
+                ctx.beginPath(); ctx.arc(0, 0, pas.size, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
                 let ox = Math.cos(tick * 2.5) * (pas.size + 6); let oy = Math.sin(tick * 2.5) * (pas.size + 6); ctx.fillStyle = "#ffffff"; ctx.beginPath(); ctx.arc(ox, oy, 3, 0, Math.PI * 2); ctx.fill(); ctx.restore();
             }
 
@@ -699,13 +1019,133 @@
                 let h = healParticles[i]; let hdx = world.dragonX - h.x; let hdy = world.dragonY - h.y; let hdistSq = hdx*hdx + hdy*hdy;
                 if (hdistSq < 625) { dragonHp = Math.min(maxHp, dragonHp + 10); updateUI(); healParticles.splice(i, 1); continue; }
                 let hdist = Math.sqrt(hdistSq); h.x += (hdx / hdist) * 13; h.y += (hdy / hdist) * 13;
-                ctx.save(); ctx.fillStyle = "#ff2266"; ctx.shadowBlur = 12; ctx.shadowColor = "#ff2266"; ctx.beginPath(); ctx.arc(h.x - camX, h.y - camY, h.size, 0, Math.PI * 2); ctx.fill(); ctx.restore();
+                ctx.save(); ctx.fillStyle = "#ff2266"; ctx.beginPath(); ctx.arc(h.x - camX, h.y - camY, h.size, 0, Math.PI * 2); ctx.fill(); ctx.restore();
             }
 
-            // GÜNCEL BOSS MOTORU (Normal ve Mega)
+            if (roarCooldown > 0) roarCooldown--;
+            ctx.globalCompositeOperation = 'lighter';
+            for (let i = roars.length - 1; i >= 0; i--) {
+                let r = roars[i];
+                r.radius += 12 + (stats.fireSizeMult * 2); r.life -= 0.025;
+                if (r.life <= 0) { roars.splice(i, 1); continue; }
+
+                ctx.save(); ctx.translate(r.x - camX, r.y - camY); ctx.rotate(r.angle);
+                ctx.strokeStyle = `rgba(255, 255, 255, ${r.life})`; ctx.lineWidth = 15 * r.life;
+                ctx.beginPath(); ctx.arc(0, 0, r.radius, -Math.PI/3, Math.PI/3); ctx.stroke();
+                ctx.restore();
+
+                let kForce = 35 * r.life;
+                const applyKnockback = (entities) => {
+                    for (let e of entities) {
+                        let dx = e.x - r.x; let dy = e.y - r.y; let dist = Math.hypot(dx, dy);
+                        if (Math.abs(dist - r.radius) < 40) {
+                            let aTarget = Math.atan2(dy, dx); let diff = Math.abs(aTarget - r.angle);
+                            if (diff > Math.PI) diff = 2 * Math.PI - diff;
+                            if (diff < Math.PI / 2.5) { e.x += Math.cos(aTarget)*kForce; e.y += Math.sin(aTarget)*kForce; e.hp -= stats.fireDamage*2; }
+                        }
+                    }
+                };
+                applyKnockback(enemies); if(boss && boss.type === 'mega') applyKnockback(boss.minions);
+            }
+            
+            for (let i = trailParticles.length - 1; i >= 0; i--) {
+                let tp = trailParticles[i]; tp.life -= 0.01;
+                if (tp.life <= 0) { trailParticles.splice(i, 1); continue; }
+                ctx.fillStyle = isRageActive ? (activeTheme.rageBlueMode ? `rgba(0, 150, 255, ${tp.life})` : `rgba(255, 255, 255, ${tp.life})`) : `rgba(255, 50, 0, ${tp.life})`;
+                ctx.beginPath(); ctx.arc(tp.x - camX, tp.y - camY, tp.size * tp.life, 0, Math.PI*2); ctx.fill();
+            }
+
+            ctx.shadowBlur = 0; 
+            for (let i = fireParticles.length - 1; i >= 0; i--) {
+                let p = fireParticles[i];
+                p.x += p.vx;
+                p.y += p.vy;
+                p.life -= p.decay;
+                p.size += p.growth;
+                if (p.life <= 0) {
+                    fireParticles.splice(i, 1);
+                    continue;
+                }
+                ctx.globalAlpha = Math.max(0, p.life);
+                let sprite = p.isBlue ? rageFireSprite : fireSprite;
+                ctx.drawImage(sprite, p.x - camX - p.size / 2, p.y - camY - p.size / 2, p.size, p.size);
+            }
+            ctx.globalAlpha = 1.0; 
+
+            for (let i = xpGems.length - 1; i >= 0; i--) {
+                let gem = xpGems[i]; const gdx = world.dragonX - gem.x; const gdy = world.dragonY - gem.y; const gDistSq = gdx*gdx + gdy*gdy;
+                if (gDistSq < 40000) { const gDist = Math.sqrt(gDistSq); gem.x += (gdx / gDist) * 12; gem.y += (gdy / gDist) * 12; }
+                if (gDistSq < 1600) { gainXp(1); xpGems.splice(i, 1); continue; }
+                const pulsex = Math.sin(tick*3)*5; ctx.globalAlpha = 0.8 + Math.sin(tick*5)*0.2;
+                ctx.drawImage(xpSprite, gem.x - camX - (gem.size+pulsex)/2, gem.y - camY - (gem.size+pulsex)/2, gem.size+pulsex, gem.size+pulsex);
+            }
+            ctx.globalAlpha = 1.0; ctx.globalCompositeOperation = 'source-over';
+
             if (boss) {
-                if (boss.type === 'regular') {
-                    // NORMAL BOSS MANTIĞI
+                if (boss.type === 'sahmeran') {
+                    boss.wobble += 0.04; 
+                    const bdx = world.dragonX - boss.x; const bdy = world.dragonY - boss.y; 
+                    const bDist = Math.hypot(bdx, bdy); const angleToDragon = Math.atan2(bdy, bdx);
+                    
+                    if(bDist > 0) { boss.x += (bdx / bDist) * boss.speed; boss.y += (bdy / bDist) * boss.speed; }
+                    boss.joints[0].x = boss.x; boss.joints[0].y = boss.y; boss.joints[0].angle = angleToDragon;
+                    for (let i = 1; i < 20; i++) { 
+                        const prev = boss.joints[i-1]; const curr = boss.joints[i]; 
+                        curr.angle = Math.atan2(prev.y - curr.y, prev.x - curr.x); 
+                        curr.x = prev.x - Math.cos(curr.angle) * 18; 
+                        curr.y = prev.y - Math.sin(curr.angle) * 18; 
+                    }
+
+                    if (bDist < boss.size + 100 && !spacePressed) {
+                        if (boss.attackCooldown <= 0) {
+                            dragonHp -= 25; applyShake(60); updateUI(); 
+                            world.dragonX += (bdx > 0 ? -180 : 180); world.dragonY += (bdy > 0 ? -180 : 180); 
+                            boss.attackCooldown = 70;
+                            playWhipSound();
+                            if (dragonHp <= 0) { gameActive = false; document.getElementById('gameOverScreen').style.display = 'flex'; document.getElementById('finalScore').innerText = score; document.getElementById('finalWave').innerText = currentWave; }
+                        }
+                    }
+                    if (boss.attackCooldown > 0) boss.attackCooldown--;
+
+                    if (boss.spitCooldown <= 0) {
+                        sahmeranProjectiles.push({x: boss.x, y: boss.y, targetX: world.dragonX, targetY: world.dragonY, progress: 0, speed: 0.015});
+                        boss.spitCooldown = 150;
+                        playAcidSound();
+                    }
+                    if (boss.spitCooldown > 0) boss.spitCooldown--;
+
+                    if (boss.intimidateCooldown <= 0) {
+                        playerSlowed = 150; 
+                        playerRageBlocked = 150;
+                        applyShake(30);
+                        boss.intimidateCooldown = 400;
+                        showWaveText("GÖZ DAĞI!", false, "#ffcc00");
+                        playSahmeranHiss();
+                    }
+                    if (boss.intimidateCooldown > 0) boss.intimidateCooldown--;
+
+                    let isHit = false;
+                    for (let p of fireParticles) { 
+                        if (p.life > 0.3 && (boss.x-p.x)**2 + (boss.y-p.y)**2 < (boss.size + p.size)**2) { 
+                            let dmg = stats.fireDamage * (isRageActive?3:1); if(Math.random()*100 < stats.critChance) dmg *= 3;
+                            boss.hp -= dmg; p.life -= 0.2; isHit = true; addRage(0.5); 
+                        } 
+                    }
+                    if(isHit && tick % 2 < 0.2) playHitSound(true);
+                    document.getElementById('bossHpBar').style.width = Math.max(0, (boss.hp / boss.maxHp) * 100) + '%';
+
+                    if (boss.hp <= 0) {
+                        playDeathSound(true); score += 20; applyShake(60); document.getElementById('killCount').innerText = score;
+                        coins += 100; document.getElementById('coinCount').innerText = coins; 
+                        for(let i=0; i<50; i++) xpGems.push({ x: boss.x + (Math.random()-0.5)*250, y: boss.y + (Math.random()-0.5)*250, size: 18 }); 
+                        boss = null; bossDefeatedThisWave = true; document.getElementById('bossUi').style.display = 'none'; 
+                        document.getElementById('screenOverlay').classList.remove('sahmeran-active');
+                        currentWave++; killsInCurrentWave = 0; bossDefeatedThisWave = false; setTimeout(() => showWaveText("DALGA " + currentWave), 2000);
+                    } else { 
+                        drawSahmeranBoss(boss, isHit, angleToDragon); 
+                    }
+
+                } else if (boss.type === 'regular') {
                     boss.wobble += 0.03; const bdx = world.dragonX - boss.x; const bdy = world.dragonY - boss.y; const bDistSq = bdx*bdx + bdy*bdy; const angleToDragon = Math.atan2(bdy, bdx);
                     if(bDistSq > 0) { const bDist = Math.sqrt(bDistSq); boss.x += (bdx / bDist) * boss.speed; boss.y += (bdy / bDist) * boss.speed; }
                     boss.joints[0].x = boss.x; boss.joints[0].y = boss.y; boss.joints[0].angle = angleToDragon;
@@ -713,9 +1153,7 @@
 
                     if (bDistSq < (boss.size + 20)**2 && !spacePressed) {
                         if ((boss.attackCooldown || 0) <= 0) {
-                            dragonHp -= 15; applyShake(40); updateUI(); 
-                            world.dragonX += (bdx > 0 ? -50 : 50); world.dragonY += (bdy > 0 ? -50 : 50); 
-                            boss.attackCooldown = 30;
+                            dragonHp -= 15; applyShake(40); updateUI(); world.dragonX += (bdx > 0 ? -50 : 50); world.dragonY += (bdy > 0 ? -50 : 50); boss.attackCooldown = 30;
                             if (dragonHp <= 0) { gameActive = false; document.getElementById('gameOverScreen').style.display = 'flex'; document.getElementById('finalScore').innerText = score; document.getElementById('finalWave').innerText = currentWave; }
                         }
                     }
@@ -733,16 +1171,13 @@
 
                     if (boss.hp <= 0) {
                         playDeathSound(true); score += 10; applyShake(50); document.getElementById('killCount').innerText = score;
+                        coins += 50; document.getElementById('coinCount').innerText = coins; 
                         for(let i=0; i<30; i++) xpGems.push({ x: boss.x + (Math.random()-0.5)*200, y: boss.y + (Math.random()-0.5)*200, size: 15 }); 
                         boss = null; bossDefeatedThisWave = true; document.getElementById('bossUi').style.display = 'none'; currentWave++; killsInCurrentWave = 0; bossDefeatedThisWave = false; setTimeout(() => showWaveText("DALGA " + currentWave), 2000);
                     } else { drawSerpentBoss(boss, '#ff0055', '#ff0055', isHit, angleToDragon); }
 
                 } else if (boss.type === 'mega') {
-                    // MEGA BOSS MANTIĞI VE KÖLELERİ
-                    boss.wobble += 0.02;
-                    let isHit = false;
-
-                    // Mega Boss Hasar Kontrolü
+                    boss.wobble += 0.02; let isHit = false;
                     for (let p of fireParticles) { 
                         if (p.life > 0.3 && (boss.x-p.x)**2 + (boss.y-p.y)**2 < (boss.size + p.size)**2) { 
                             let dmg = stats.fireDamage * (isRageActive?3:1); if(Math.random()*100 < stats.critChance) dmg *= 3;
@@ -750,10 +1185,8 @@
                         } 
                     }
 
-                    // Kölelerin Hareketi ve Hasarı
                     for(let i = boss.minions.length - 1; i >= 0; i--) {
-                        let m = boss.minions[i];
-                        let mHit = false;
+                        let m = boss.minions[i]; let mHit = false;
                         for (let p of fireParticles) { 
                             if (p.life > 0.3 && (m.x-p.x)**2 + (m.y-p.y)**2 < (m.size + p.size)**2) { 
                                 let dmg = stats.fireDamage * (isRageActive?3:1); if(Math.random()*100 < stats.critChance) dmg *= 3;
@@ -761,17 +1194,11 @@
                             } 
                         }
                         
-                        let targetX = boss.x + Math.cos(tick*0.5 + i*Math.PI)*300;
-                        let targetY = boss.y + Math.sin(tick*0.5 + i*Math.PI)*300;
-
-                        if (boss.isAggro) {
-                            let distToBoss = Math.hypot(boss.x - m.x, boss.y - m.y);
-                            if (distToBoss < 1200) { targetX = world.dragonX; targetY = world.dragonY; } // Efendiden kopmadıysa sana saldırır
-                        }
+                        let targetX = boss.x + Math.cos(tick*0.5 + i*Math.PI)*300; let targetY = boss.y + Math.sin(tick*0.5 + i*Math.PI)*300;
+                        if (boss.isAggro && Math.hypot(boss.x - m.x, boss.y - m.y) < 1200) { targetX = world.dragonX; targetY = world.dragonY; } 
 
                         let mdx = targetX - m.x; let mdy = targetY - m.y; let mdist = Math.hypot(mdx, mdy);
                         if (mdist > 0) { m.x += (mdx/mdist)*m.speed; m.y += (mdy/mdist)*m.speed; }
-                        
                         m.joints[0].x = m.x; m.joints[0].y = m.y; m.joints[0].angle = Math.atan2(mdy, mdx);
                         for (let k = 1; k < 15; k++) { const prev = m.joints[k-1]; const curr = m.joints[k]; curr.angle = Math.atan2(prev.y - curr.y, prev.x - curr.x); curr.x = prev.x - Math.cos(curr.angle) * 20; curr.y = prev.y - Math.sin(curr.angle) * 20; }
 
@@ -784,13 +1211,10 @@
                         drawSerpentBoss(m, '#cc00ff', '#cc00ff', mHit, m.joints[0].angle);
                     }
 
-                    // Mega Boss Hareketi
-                    if (!boss.isAggro) {
-                        boss.x += Math.cos(tick*0.2)*0.5; boss.y += Math.sin(tick*0.2)*0.5;
-                    } else {
+                    if (!boss.isAggro) { boss.x += Math.cos(tick*0.2)*0.5; boss.y += Math.sin(tick*0.2)*0.5; } 
+                    else {
                         let bdx = world.dragonX - boss.x; let bdy = world.dragonY - boss.y; let bdist = Math.hypot(bdx, bdy);
                         if (bdist > 0) { boss.x += (bdx/bdist)*boss.speed; boss.y += (bdy/bdist)*boss.speed; }
-                        
                         if (bdist < (boss.size + 20) && !spacePressed) {
                             if ((boss.attackCooldown || 0) <= 0) { dragonHp -= 40; applyShake(50); updateUI(); world.dragonX += (bdx > 0 ? -100 : 100); world.dragonY += (bdy > 0 ? -100 : 100); boss.attackCooldown = 50; if (dragonHp <= 0) { gameActive = false; document.getElementById('gameOverScreen').style.display = 'flex'; } }
                         }
@@ -802,20 +1226,17 @@
 
                     if (boss.hp <= 0) {
                         playDeathSound(true); score += 50; applyShake(80); document.getElementById('killCount').innerText = score;
+                        coins += 250; document.getElementById('coinCount').innerText = coins; 
                         for(let i=0; i<80; i++) xpGems.push({ x: boss.x + (Math.random()-0.5)*300, y: boss.y + (Math.random()-0.5)*300, size: 20 }); 
                         boss = null; bossDefeatedThisWave = true; document.getElementById('bossUi').style.display = 'none'; currentWave++; killsInCurrentWave = 0; bossDefeatedThisWave = false; setTimeout(() => showWaveText("DALGA " + currentWave), 2000);
                     } else {
-                        // Mega Boss Çizimi (Karanlık Monolit)
                         const bx = boss.x - camX; const by = boss.y - camY;
                         ctx.save(); ctx.translate(bx, by);
                         ctx.fillStyle = isHit ? '#ffffff' : '#0a0011'; ctx.strokeStyle = '#cc00ff'; ctx.shadowBlur = 60; ctx.shadowColor = '#cc00ff';
-                        
                         ctx.save(); ctx.rotate(tick); ctx.lineWidth = 5; ctx.beginPath(); ctx.arc(0, 0, boss.size, 0, Math.PI*2); ctx.stroke();
                         for(let i=0; i<4; i++) { ctx.rotate(Math.PI/2); ctx.beginPath(); ctx.moveTo(boss.size, 0); ctx.lineTo(boss.size+40, 0); ctx.stroke(); }
                         ctx.restore();
-                        
                         ctx.save(); ctx.rotate(-tick*0.5); ctx.lineWidth = 8; ctx.beginPath(); ctx.arc(0, 0, boss.size*0.7, 0, Math.PI*2); ctx.stroke(); ctx.restore();
-
                         const pulse = Math.sin(tick*3)*15;
                         ctx.fillStyle = '#cc00ff'; ctx.beginPath(); ctx.arc(0, 0, 40 + pulse, 0, Math.PI*2); ctx.fill();
                         ctx.fillStyle = '#000000'; ctx.beginPath(); ctx.ellipse(0, 0, 10, 25 + pulse*0.5, 0, 0, Math.PI*2); ctx.fill();
@@ -841,8 +1262,7 @@
 
                 if (edistSq < (e.size + 20*sizeMultiplier)**2 && !spacePressed) {
                     if ((e.attackCooldown || 0) <= 0) {
-                        dragonHp -= 10; applyShake(10); updateUI(); 
-                        e.attackCooldown = 40; 
+                        dragonHp -= 10; applyShake(10); updateUI(); e.attackCooldown = 40; 
                         if (dragonHp <= 0) { gameActive = false; document.getElementById('gameOverScreen').style.display = 'flex'; document.getElementById('finalScore').innerText = score; document.getElementById('finalWave').innerText = currentWave; }
                     }
                 }
@@ -861,7 +1281,9 @@
 
                 if (e.hp <= 0) {
                     playDeathSound(false);
-                    score++; document.getElementById('killCount').innerText = score; killsInCurrentWave++; xpGems.push({ x: e.x, y: e.y, size: 10 + Math.random()*10 });
+                    score++; document.getElementById('killCount').innerText = score; killsInCurrentWave++;
+                    coins += 2; document.getElementById('coinCount').innerText = coins; 
+                    xpGems.push({ x: e.x, y: e.y, size: 10 + Math.random()*10 });
                     if(Math.random()*100 < stats.lifeStealChance && dragonHp < maxHp) { dragonHp = Math.min(maxHp, dragonHp + 5); updateUI(); } 
                     if(killsInCurrentWave >= killsNeededForNextWave && !boss) { currentWave++; killsInCurrentWave = 0; showWaveText("DALGA " + currentWave); }
                     enemies.splice(i, 1); continue;
@@ -869,7 +1291,8 @@
 
                 const ex = e.x - camX; const ey = e.y - camY;
                 ctx.save(); ctx.translate(ex, ey); ctx.rotate(angleToDragon);
-                ctx.fillStyle = isHit ? '#ffffff' : '#140022'; ctx.strokeStyle = spacePressed ? 'rgba(170, 0, 255, 0.3)' : '#aa00ff'; ctx.lineWidth = 2; ctx.shadowBlur = 10; ctx.shadowColor = '#aa00ff';
+                ctx.fillStyle = isHit ? '#ffffff' : '#140022'; ctx.strokeStyle = spacePressed ? 'rgba(170, 0, 255, 0.3)' : '#aa00ff'; ctx.lineWidth = 2; 
+                ctx.shadowBlur = 0; 
 
                 if (e.type === 'bat') {
                     const batFlap = Math.sin(tick * 10 + e.wobble) * 0.8;
@@ -894,22 +1317,6 @@
                 ctx.restore();
             }
 
-            ctx.globalCompositeOperation = 'lighter';
-            for (let i = trailParticles.length - 1; i >= 0; i--) {
-                let tp = trailParticles[i]; tp.life -= 0.01;
-                if (tp.life <= 0) { trailParticles.splice(i, 1); continue; }
-                ctx.fillStyle = isRageActive ? (activeTheme.rageBlueMode ? `rgba(0, 150, 255, ${tp.life})` : `rgba(255, 255, 255, ${tp.life})`) : `rgba(255, 50, 0, ${tp.life})`;
-                ctx.beginPath(); ctx.arc(tp.x - camX, tp.y - camY, tp.size * tp.life, 0, Math.PI*2); ctx.fill();
-            }
-            for (let i = xpGems.length - 1; i >= 0; i--) {
-                let gem = xpGems[i]; const gdx = world.dragonX - gem.x; const gdy = world.dragonY - gem.y; const gDistSq = gdx*gdx + gdy*gdy;
-                if (gDistSq < 40000) { const gDist = Math.sqrt(gDistSq); gem.x += (gdx / gDist) * 12; gem.y += (gdy / gDist) * 12; }
-                if (gDistSq < 1600) { gainXp(1); xpGems.splice(i, 1); continue; }
-                const pulsex = Math.sin(tick*3)*5; ctx.globalAlpha = 0.8 + Math.sin(tick*5)*0.2;
-                ctx.drawImage(xpSprite, gem.x - camX - (gem.size+pulsex)/2, gem.y - camY - (gem.size+pulsex)/2, gem.size+pulsex, gem.size+pulsex);
-            }
-            ctx.globalAlpha = 1.0; ctx.globalCompositeOperation = 'source-over';
-
             joints[0].x = world.dragonX; joints[0].y = world.dragonY;
             if (distFromCenter > 1 && !isJoyActive) joints[0].angle = Math.atan2(screenDy, screenDx);
             if (isJoyActive) {
@@ -926,7 +1333,7 @@
                 current.y = prev.y - Math.sin(current.angle) * (segmentLength * currentStretcht * sizeMultiplier);
             }
 
-            if (spacePressed) { ctx.globalAlpha = 0.35; ctx.shadowColor = '#ffffff'; ctx.shadowBlur = 25; }
+            if (spacePressed) { ctx.globalAlpha = 0.35; ctx.shadowColor = '#ffffff'; ctx.shadowBlur = 5; }
             drawWings(ctx, 4, 1.0 * sizeMultiplier, 0); drawWings(ctx, 10, 0.65 * sizeMultiplier, Math.PI / 4);   
 
             for (let i = numSegments - 1; i >= 0; i--) {
@@ -946,10 +1353,19 @@
                     const colorRatio = i / numSegments; const hueDiff = activeTheme.hueStart - activeTheme.hueEnd;
                     const hue = spacePressed ? 0 : (isRageActive ? (activeTheme.rageBlueMode ? 220 : 0) : activeTheme.hueStart - (colorRatio * hueDiff)); 
                     const saturation = spacePressed ? '0%' : '100%';
-                    ctx.fillStyle = `hsla(${hue}, ${saturation}, 8%, 0.9)`; ctx.strokeStyle = `hsla(${hue}, ${saturation}, 50%, 0.9)`; ctx.shadowColor = ctx.strokeStyle; ctx.shadowBlur = 15;
+                    ctx.fillStyle = `hsla(${hue}, ${saturation}, 8%, 0.9)`; ctx.strokeStyle = `hsla(${hue}, ${saturation}, 50%, 0.9)`; 
+                    
+                    ctx.shadowColor = spacePressed ? 'transparent' : ctx.strokeStyle; 
+                    ctx.shadowBlur = 0; // --- Optimizasyon: FPS düşmanı efekt kaldırıldı ---
+                    
                     const size = Math.max(3, 20 * (1 - colorRatio)); const stretchRatio = 1 + (currentStretcht - 1) * 0.4;
                     ctx.lineWidth = 2; ctx.beginPath(); ctx.ellipse(0, 0, size * stretchRatio, size * (1 / stretchRatio), 0, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
                     if (i > 1 && i < numSegments - 2) { ctx.fillStyle = `hsla(${hue}, ${saturation}, 30%, 0.9)`; ctx.beginPath(); ctx.moveTo(0, -size); ctx.lineTo(-size * 1.8, -size * 2.8); ctx.lineTo(-size * 1.2, -size * 0.5); ctx.fill(); ctx.beginPath(); ctx.moveTo(0, size); ctx.lineTo(-size * 1.8, size * 2.8); ctx.lineTo(-size * 1.2, size * 0.5); ctx.fill(); }
+                }
+
+                if (i === 2 && stats.hasThreeHeads) {
+                    ctx.save(); ctx.translate(-10, -25); ctx.rotate(-0.4); ctx.scale(0.6, 0.6); drawDragonHead(ctx, glowColor, armorColor, false); ctx.restore();
+                    ctx.save(); ctx.translate(-10, 25); ctx.rotate(0.4); ctx.scale(0.6, 0.6); drawDragonHead(ctx, glowColor, armorColor, false); ctx.restore();
                 }
                 ctx.restore();
             }
@@ -958,18 +1374,15 @@
             ctx.save(); ctx.translate(tailEnd.x - camX, tailEnd.y - camY); ctx.rotate(tailEnd.angle); ctx.scale(sizeMultiplier, sizeMultiplier);
             const tailColor = spacePressed ? '#ffffff' : (isRageActive ? (activeTheme.rageBlueMode ? '#0088ff' : '#ffffff') : activeTheme.mainColor);
             
-            ctx.fillStyle = '#0a0000'; ctx.strokeStyle = tailColor; ctx.lineWidth = 2.5; ctx.shadowBlur = 20; ctx.shadowColor = tailColor;
+            ctx.fillStyle = '#0a0000'; ctx.strokeStyle = tailColor; ctx.lineWidth = 2.5; 
+            ctx.shadowBlur = 0; // --- Optimizasyon ---
+            ctx.shadowColor = tailColor;
             ctx.beginPath(); ctx.moveTo(0, 0); ctx.lineTo(-15, -25); ctx.lineTo(-40, -35); ctx.lineTo(-25, -10); ctx.lineTo(-50, 0); ctx.lineTo(-25, 10); ctx.lineTo(-40, 35); ctx.lineTo(-15, 25); ctx.closePath(); ctx.fill(); ctx.stroke();
             ctx.fillStyle = tailColor; ctx.beginPath(); ctx.arc(-20, 0, 5, 0, Math.PI*2); ctx.fill(); ctx.restore();
 
-            ctx.globalAlpha = 1.0; ctx.shadowBlur = 0;
-
-            for (let i = fireParticles.length - 1; i >= 0; i--) { let p = fireParticles[i]; p.x += p.vx; p.y += p.vy; p.vx *= 0.92; p.vy *= 0.92; p.size += p.growth; p.life -= p.decay; if (p.life <= 0) fireParticles.splice(i, 1); }
-            ctx.globalCompositeOperation = 'lighter';
-            for (let i = 0; i < fireParticles.length; i++) { let p = fireParticles[i]; if (p.life > 0.3) { ctx.globalAlpha = (p.life - 0.3) / 0.7; ctx.drawImage(p.isBlue ? rageFireSprite : fireSprite, p.x - camX - p.size / 2, p.y - camY - p.size / 2, p.size, p.size); } }
-            ctx.globalCompositeOperation = 'source-over';
-            for (let i = 0; i < fireParticles.length; i++) { let p = fireParticles[i]; if (p.life <= 0.3) { ctx.globalAlpha = p.life / 0.3; ctx.drawImage(smokeSprite, p.x - camX - p.size / 2, p.y - camY - p.size / 2, p.size, p.size); } }
-            ctx.globalAlpha = 1.0;
+            if (boss) {
+                drawBossIndicator(boss);
+            }
 
             requestAnimationFrame(animate);
         }
