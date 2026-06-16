@@ -5,8 +5,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Börü: Son Kral - Sistem ve Market Güncellemesi</title>
     <style>
-        * { margin: 0; padding: 0; box-sizing: border-box; overflow: hidden; touch-action: none; }
-        body, html { width: 100%; height: 100%; background-color: #030000; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; cursor: crosshair; }
+        * { margin: 0; padding: 0; box-sizing: border-box; touch-action: none; }
+        body, html { width: 100%; height: 100%; background-color: #030000; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; cursor: crosshair; overflow: hidden; }
         canvas { display: block; width: 100vw; height: 100vh; }
         
         #ui { position: absolute; top: 20px; left: 20px; color: rgba(255, 255, 255, 0.8); pointer-events: none; font-size: 14px; background: rgba(10, 0, 0, 0.85); padding: 15px; border-radius: 8px; border: 1px solid rgba(255, 255, 255, 0.2); z-index: 10; }
@@ -43,21 +43,35 @@
 
         .overlay { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(5, 0, 0, 0.95); display: flex; flex-direction: column; justify-content: center; align-items: center; z-index: 100; color: white; }
         .overlay h1 { font-size: 50px; margin-bottom: 5px; letter-spacing: 2px; }
-        .lore-quote { font-style: italic; color: #888; margin-bottom: 40px; max-width: 600px; text-align: center; }
+        .lore-quote { font-style: italic; color: #888; margin-bottom: 40px; max-width: 600px; text-align: center; line-height: 1.5; }
         
-        .action-btn { padding: 12px 40px; font-size: 20px; background: transparent; color: white; border: 2px solid white; cursor: pointer; font-weight: bold; border-radius: 4px; transition: 0.2s; margin-top: 30px; letter-spacing: 2px;}
+        .action-btn { padding: 12px 40px; font-size: 20px; background: transparent; color: white; border: 2px solid white; cursor: pointer; font-weight: bold; border-radius: 4px; transition: 0.2s; margin-top: 20px; letter-spacing: 2px;}
         .action-btn:hover { background: white; color: #000; box-shadow: 0 0 25px white; }
         
-        #themeSelector { display: flex; gap: 20px; margin-top: 20px; }
-        .theme-card { background: #111; border: 2px solid #444; border-radius: 10px; padding: 20px; width: 160px; text-align: center; cursor: pointer; transition: 0.3s; opacity: 0.5; }
-        .theme-card.active { opacity: 1; transform: scale(1.1); }
-        .theme-card.magma.active { border-color: #ff3300; box-shadow: 0 0 30px #ff3300; }
-        .theme-card.ice.active { border-color: #00ffff; box-shadow: 0 0 30px #00ffff; }
-        .theme-card.poison.active { border-color: #33ff00; box-shadow: 0 0 30px #33ff00; }
+        /* Tema Seçici Scroll Edilebilir Alan */
+        #themeSelector { display: flex; gap: 15px; margin-top: 15px; max-width: 90vw; overflow-x: auto; padding-bottom: 10px; }
+        #themeSelector::-webkit-scrollbar { height: 6px; }
+        #themeSelector::-webkit-scrollbar-track { background: rgba(255,255,255,0.05); border-radius: 3px; }
+        #themeSelector::-webkit-scrollbar-thumb { background: #555; border-radius: 3px; }
         
-        #cardsContainer, #shopCardsContainer { display: flex; gap: 20px; margin-top: 30px; flex-wrap: wrap; justify-content: center; max-width: 800px; }
-        .upgrade-card { background: rgba(20, 20, 20, 0.9); border: 2px solid #555; border-radius: 10px; padding: 20px; width: 220px; text-align: center; cursor: pointer; transition: 0.2s; }
-        .upgrade-card:hover { transform: translateY(-10px); background: rgba(40, 40, 40, 0.9); box-shadow: 0 0 20px rgba(255,255,255,0.2); }
+        .theme-card { flex: 0 0 auto; background: #111; border: 2px solid #444; border-radius: 10px; padding: 15px; width: 140px; text-align: center; cursor: pointer; transition: 0.3s; opacity: 0.5; }
+        .theme-card.active { opacity: 1; transform: scale(1.05); }
+
+        /* Zorluk Butonları */
+        .diff-btn { padding: 8px 15px; background: #222; color: #aaa; border: 2px solid #444; border-radius: 5px; cursor: pointer; font-weight: bold; transition: 0.2s; }
+        
+        /* Market Grid Tasarımı */
+        #cardsContainer { display: flex; gap: 20px; margin-top: 30px; flex-wrap: wrap; justify-content: center; max-width: 800px; }
+        #shopCardsContainer { 
+            display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 25px; 
+            margin-top: 30px; width: 100%; max-width: 1000px; max-height: 60vh; overflow-y: auto; padding: 20px; 
+        }
+        #shopCardsContainer::-webkit-scrollbar { width: 8px; }
+        #shopCardsContainer::-webkit-scrollbar-track { background: rgba(0,0,0,0.3); border-radius: 4px; }
+        #shopCardsContainer::-webkit-scrollbar-thumb { background: #ffd700; border-radius: 4px; }
+
+        .upgrade-card { background: linear-gradient(145deg, rgba(20, 20, 20, 0.9), rgba(10, 10, 10, 0.95)); border: 2px solid #555; border-radius: 12px; padding: 25px 20px; text-align: center; cursor: pointer; transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1); position: relative; overflow: hidden; }
+        .upgrade-card:hover { transform: translateY(-8px) scale(1.02); background: rgba(40, 40, 40, 0.95); box-shadow: 0 10px 30px rgba(255, 215, 0, 0.15); border-color: currentColor; }
 
         #mobileControls { display: none; position: fixed; bottom: 30px; left: 20px; right: 20px; justify-content: space-between; align-items: flex-end; z-index: 1000; user-select: none; }
         @media (pointer: coarse) { #mobileControls { display: flex; } #ui { display: none; } }
@@ -98,19 +112,25 @@
         <h1 id="titleText" style="color:#ff3300; text-shadow: 0 0 20px #ff3300;">BÖRÜ: SON KRAL</h1>
         <p class="lore-quote">"O uyandığında, gölgeler bile saklanacak delik aradı..."</p>
         
-        <h3 style="color: #ccc; margin-bottom: 10px; letter-spacing: 2px;">Ruhunu Seç</h3>
+        <h3 style="color: #ccc; margin-top: 10px; font-size:16px; letter-spacing: 2px;">Ruhunu Seç</h3>
         <div id="themeSelector">
-            <div class="theme-card magma active" onclick="selectTheme('magma')">
-                <h2 style="color: #ff3300;">MAGMA</h2><p style="font-size: 12px; color: #888; margin-top:5px;">Yakıcı Öfke</p>
             </div>
-            <div class="theme-card ice" onclick="selectTheme('ice')">
-                <h2 style="color: #00ffff;">BUZ</h2><p style="font-size: 12px; color: #888; margin-top:5px;">Mutlak Sıfır</p>
+
+        <div id="gameSettings" style="margin-top: 25px; display: flex; flex-direction: column; gap: 15px; align-items: center;">
+            <div id="difficultySelector" style="display: flex; gap: 10px;">
+                <button class="diff-btn active" onclick="setDifficulty(1, this)">KOLAY</button>
+                <button class="diff-btn" onclick="setDifficulty(1.5, this)">NORMAL</button>
+                <button class="diff-btn" onclick="setDifficulty(2.5, this)">CEHENNEM</button>
             </div>
-            <div class="theme-card poison" onclick="selectTheme('poison')">
-                <h2 style="color: #33ff00;">ZEHİR</h2><p style="font-size: 12px; color: #888; margin-top:5px;">Asit Yağmuru</p>
+            <div style="color: #ccc; font-size: 14px; font-weight:bold;">
+                <label style="display:flex; align-items:center; gap:10px;">
+                    Oyun Sesi: 
+                    <input type="range" id="volumeSlider" min="0" max="1" step="0.1" value="0.5">
+                </label>
             </div>
         </div>
-        <button class="action-btn" id="startBtn">UYAN</button>
+
+        <button class="action-btn" id="startBtn">BAŞLA</button>
     </div>
 
     <div id="pauseMenu" class="overlay" style="display: none; z-index: 200;">
@@ -124,7 +144,7 @@
         <h1 style="color:#ffd700; text-shadow: 0 0 20px #ffd700;">KARABORSA</h1>
         <p>Mevcut Koin: <span id="shopCoinCount" style="color:#fff; font-weight:bold; font-size:20px;">0</span></p>
         <div id="shopCardsContainer"></div>
-        <button class="action-btn" onclick="closeShop()">GERİ DÖN</button>
+        <button class="action-btn" style="margin-top:20px;" onclick="closeShop()">GERİ DÖN</button>
     </div>
 
     <div id="gameOverScreen" class="overlay" style="display: none;">
@@ -182,41 +202,121 @@
             '"Boynuzlarındaki her bir çizik, devrilmiş bir gölge lordunun feryadıdır."',
             '"Ateş sadece yakmaz, hiçliği de arındırır."',
             '"Titreyin... Kadim Hiçlik uyanıyor."',
-            '"Zırhı deşilmez, iradesi bükülmez. O, düşenlerin son umududur."'
+            '"Zırhı deşilmez, iradesi bükülmez. O, düşenlerin son umududur."',
+            'TAKTİK: Hayalet modu (SPACE) hasar almanı engeller ama ateş edemezsin.',
+            'TAKTİK: Kükreme (E) yeteneği, etrafını saran iblisleri geri savurur.',
+            'TAKTİK: Rüzgar Çizmeleri alarak süzülme hızını artır ve düşmanlardan kolayca kaç.',
+            'TAKTİK: Boss savaşlarından önce Öfke (RAGE) barını dolu tutmak hayat kurtarır.'
         ];
-        setInterval(() => { document.getElementById('loreCorner').innerText = lores[Math.floor(Math.random() * lores.length)]; }, 15000);
+        setInterval(() => { document.getElementById('loreCorner').innerText = lores[Math.floor(Math.random() * lores.length)]; }, 10000);
+
+        // SEVİYE SİSTEMİ VE YENİ TEMALAR
+        let maxLevelReached = parseInt(localStorage.getItem('boruMaxLevel')) || 1;
 
         const themes = {
-            magma: { name: 'Magma', mainColor: '#ff3300', uiColor: '#ff3300', hueStart: 40, hueEnd: 0, rageBlueMode: true },
-            ice: { name: 'Buz', mainColor: '#00ffff', uiColor: '#00ffff', hueStart: 200, hueEnd: 180, rageBlueMode: false },
-            poison: { name: 'Zehir', mainColor: '#33ff00', uiColor: '#33ff00', hueStart: 120, hueEnd: 90, rageBlueMode: false },
-            void: { name: 'Hiçlik', mainColor: '#cc00ff', uiColor: '#cc00ff', hueStart: 280, hueEnd: 260, rageBlueMode: false }
+            magma: { name: 'Magma', reqLevel: 1, mainColor: '#ff3300', uiColor: '#ff3300', hueStart: 40, hueEnd: 0, rageBlueMode: true, icon: '🔥' },
+            ice: { name: 'Buz', reqLevel: 1, mainColor: '#00ffff', uiColor: '#00ffff', hueStart: 200, hueEnd: 180, rageBlueMode: false, icon: '❄️' },
+            poison: { name: 'Zehir', reqLevel: 1, mainColor: '#33ff00', uiColor: '#33ff00', hueStart: 120, hueEnd: 90, rageBlueMode: false, icon: '🐍' },
+            void: { name: 'Hiçlik', reqLevel: 5, mainColor: '#cc00ff', uiColor: '#cc00ff', hueStart: 280, hueEnd: 260, rageBlueMode: false, icon: '🌌' },
+            crystal: { name: 'Kristal', reqLevel: 10, mainColor: '#ffffff', uiColor: '#ffffff', hueStart: 0, hueEnd: 0, rageBlueMode: true, icon: '💎' },
+            blood: { name: 'Kan', reqLevel: 15, mainColor: '#880000', uiColor: '#880000', hueStart: 0, hueEnd: 0, rageBlueMode: false, icon: '🩸' },
+            lightning: { name: 'Yıldırım', reqLevel: 20, mainColor: '#ffee00', uiColor: '#ffee00', hueStart: 60, hueEnd: 50, rageBlueMode: false, icon: '⚡' },
+            shadow: { name: 'Gölge', reqLevel: 25, mainColor: '#444444', uiColor: '#444444', hueStart: 0, hueEnd: 0, rageBlueMode: false, icon: '🌑' },
+            spectral: { name: 'Ruhani', reqLevel: 30, mainColor: '#aaffff', uiColor: '#aaffff', hueStart: 180, hueEnd: 160, rageBlueMode: false, icon: '👻' },
+            solar: { name: 'Kozmik Güneş', reqLevel: 35, mainColor: '#ff8800', uiColor: '#ff8800', hueStart: 30, hueEnd: 20, rageBlueMode: true, icon: '☀️' },
+            abyss: { name: 'Derinlik', reqLevel: 40, mainColor: '#000088', uiColor: '#000088', hueStart: 240, hueEnd: 220, rageBlueMode: false, icon: '🌊' },
+            chaos: { name: 'Kaos', reqLevel: 45, mainColor: '#ff00aa', uiColor: '#ff00aa', hueStart: 300, hueEnd: 280, rageBlueMode: true, icon: '🌀' },
+            ascended: { name: 'Yükselmiş Börü', reqLevel: 50, mainColor: '#ffd700', uiColor: '#ffd700', hueStart: 50, hueEnd: 40, rageBlueMode: true, icon: '👑' }
         };
         let activeTheme = themes.magma;
         
+        function renderThemes() {
+            const container = document.getElementById('themeSelector');
+            container.innerHTML = '';
+            for(let key in themes) {
+                let t = themes[key];
+                let isLocked = maxLevelReached < t.reqLevel;
+                let activeCls = (activeTheme.name === t.name) ? 'active' : '';
+                let lockStyle = isLocked ? 'opacity: 0.3; filter: grayscale(100%); cursor: not-allowed;' : '';
+                
+                container.innerHTML += `
+                    <div class="theme-card ${key} ${activeCls}" style="${lockStyle} border-color: ${activeCls ? t.mainColor : '#444'}; box-shadow: ${activeCls ? '0 0 30px '+t.mainColor : 'none'};" 
+                         onclick="${isLocked ? '' : `selectTheme('${key}')`}">
+                        <h2 style="color: ${t.mainColor}; font-size:24px;">${t.icon}</h2>
+                        <h3 style="color: ${t.mainColor}; margin-top:5px; font-size:16px;">${t.name}</h3>
+                        ${isLocked ? `<p style="font-size: 11px; color: #f55; margin-top:5px;">SV. ${t.reqLevel} Gerekli</p>` : `<p style="font-size: 11px; color: #888; margin-top:5px;">Açık</p>`}
+                    </div>
+                `;
+            }
+        }
+        
         window.selectTheme = function(themeId) {
-            document.querySelectorAll('.theme-card').forEach(c => c.classList.remove('active'));
-            if(document.querySelector('.theme-card.' + themeId)) document.querySelector('.theme-card.' + themeId).classList.add('active');
+            if(maxLevelReached < themes[themeId].reqLevel) return;
             activeTheme = themes[themeId];
             document.getElementById('titleText').style.color = activeTheme.mainColor;
             document.getElementById('titleText').style.textShadow = `0 0 20px ${activeTheme.mainColor}`;
             document.getElementById('startBtn').style.color = activeTheme.mainColor;
             document.getElementById('startBtn').style.borderColor = activeTheme.mainColor;
+            
+            document.querySelectorAll('.diff-btn.active').forEach(b => {
+                b.style.backgroundColor = activeTheme.mainColor;
+                b.style.borderColor = activeTheme.mainColor;
+                b.style.boxShadow = `0 0 10px ${activeTheme.mainColor}`;
+            });
+            renderThemes();
         };
+
+        renderThemes(); // Başlangıçta temaları çizdir
+
+        // ZORLUK VE SES AYARLARI
+        let difficultyMult = 1.0;
+        let masterVolume = 0.5;
+        let masterGainNode = null;
+
+        document.getElementById('volumeSlider').addEventListener('input', (e) => {
+            masterVolume = parseFloat(e.target.value);
+            if(masterGainNode) masterGainNode.gain.value = masterVolume;
+        });
+
+        window.setDifficulty = function(val, btn) {
+            difficultyMult = val;
+            document.querySelectorAll('.diff-btn').forEach(b => {
+                b.classList.remove('active');
+                b.style.backgroundColor = '#222';
+                b.style.borderColor = '#444';
+                b.style.boxShadow = 'none';
+                b.style.color = '#aaa';
+            });
+            btn.classList.add('active');
+            btn.style.backgroundColor = activeTheme.mainColor;
+            btn.style.borderColor = activeTheme.mainColor;
+            btn.style.boxShadow = `0 0 10px ${activeTheme.mainColor}`;
+            btn.style.color = '#fff';
+        };
+
+        // UI Başlangıç Zorluk Rengini Uygula
+        document.querySelector('.diff-btn.active').style.backgroundColor = activeTheme.mainColor;
+        document.querySelector('.diff-btn.active').style.borderColor = activeTheme.mainColor;
+        document.querySelector('.diff-btn.active').style.boxShadow = `0 0 10px ${activeTheme.mainColor}`;
+        document.querySelector('.diff-btn.active').style.color = '#fff';
 
         const shake = { magnitude: 0, decay: 0.85 };
         function applyShake(intensity) { if(intensity > shake.magnitude) shake.magnitude = intensity; }
 
-        let audioCtx, windGain, fireGain, windFilter, fireFilter;
+        let audioCtx, fireGain, fireFilter;
+        
         function initAudio() { 
             audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+            masterGainNode = audioCtx.createGain(); 
+            masterGainNode.gain.value = masterVolume; 
+            masterGainNode.connect(audioCtx.destination);
+
             const bufferSize = audioCtx.sampleRate * 2; const buffer = audioCtx.createBuffer(1, bufferSize, audioCtx.sampleRate); const data = buffer.getChannelData(0);
             for (let i = 0; i < bufferSize; i++) data[i] = Math.random() * 2 - 1; 
             const noiseSrc = audioCtx.createBufferSource(); noiseSrc.buffer = buffer; noiseSrc.loop = true;
-            windFilter = audioCtx.createBiquadFilter(); windFilter.type = 'lowpass'; windFilter.frequency.value = 200; windGain = audioCtx.createGain(); windGain.gain.value = 0;
+            
             fireFilter = audioCtx.createBiquadFilter(); fireFilter.type = 'bandpass'; fireFilter.frequency.value = 700; fireFilter.Q.value = 0.6; fireGain = audioCtx.createGain(); fireGain.gain.value = 0;
-            noiseSrc.connect(windFilter).connect(windGain).connect(audioCtx.destination);
-            noiseSrc.connect(fireFilter).connect(fireGain).connect(audioCtx.destination); noiseSrc.start();
+            noiseSrc.connect(fireFilter).connect(fireGain).connect(masterGainNode); noiseSrc.start();
         }
 
         function playTone(freq, type, duration, vol, sweep = false) {
@@ -226,7 +326,7 @@
             if (sweep) osc.frequency.exponentialRampToValueAtTime(freq * 0.5, audioCtx.currentTime + duration);
             gain.gain.setValueAtTime(vol, audioCtx.currentTime);
             gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + duration);
-            osc.connect(gain); gain.connect(audioCtx.destination); osc.start(); osc.stop(audioCtx.currentTime + duration);
+            osc.connect(gain); gain.connect(masterGainNode); osc.start(); osc.stop(audioCtx.currentTime + duration);
         }
 
         function playHitSound(isBoss) {
@@ -248,7 +348,7 @@
             const noise = audioCtx.createBufferSource(); noise.buffer = buffer;
             const filter = audioCtx.createBiquadFilter(); filter.type = 'bandpass'; filter.frequency.value = 2500; filter.Q.value = 2.0;
             const gain = audioCtx.createGain(); gain.gain.setValueAtTime(0.6, audioCtx.currentTime); gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 2.0);
-            noise.connect(filter).connect(gain).connect(audioCtx.destination);
+            noise.connect(filter).connect(gain).connect(masterGainNode);
             noise.start(); noise.stop(audioCtx.currentTime + 2.0);
         }
 
@@ -279,7 +379,7 @@
             
             osc1.connect(gain);
             osc2.connect(gain);
-            gain.connect(audioCtx.destination);
+            gain.connect(masterGainNode);
             
             osc1.start(); osc1.stop(audioCtx.currentTime + 1);
             osc2.start(); osc2.stop(audioCtx.currentTime + 1);
@@ -292,7 +392,7 @@
             osc.frequency.exponentialRampToValueAtTime(10, audioCtx.currentTime + 4);
             gain.gain.setValueAtTime(0.8, audioCtx.currentTime);
             gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 4);
-            osc.connect(gain); gain.connect(audioCtx.destination); osc.start(); osc.stop(audioCtx.currentTime + 4);
+            osc.connect(gain); gain.connect(masterGainNode); osc.start(); osc.stop(audioCtx.currentTime + 4);
         }
 
         let fireSprite, rageFireSprite, smokeSprite, xpSprite;
@@ -309,9 +409,10 @@
             } else if(themeData.name === 'Zehir') {
                 if(isRage) { grad.addColorStop(0.2, '#cc00ff'); grad.addColorStop(0.6, 'rgba(100, 0, 255, 0.8)'); } 
                 else { grad.addColorStop(0.2, '#aaff00'); grad.addColorStop(0.6, 'rgba(50, 200, 0, 0.8)'); }
-            } else if(themeData.name === 'Hiçlik') {
-                if(isRage) { grad.addColorStop(0.2, '#ffffff'); grad.addColorStop(0.6, 'rgba(255, 0, 100, 0.8)'); } 
-                else { grad.addColorStop(0.2, '#ff00ff'); grad.addColorStop(0.6, 'rgba(100, 0, 255, 0.8)'); }
+            } else {
+                // Diğer tüm temalar için dinamik gradyan uyarlaması
+                if(isRage) { grad.addColorStop(0.2, '#ffffff'); grad.addColorStop(0.6, themeData.uiColor); } 
+                else { grad.addColorStop(0.2, themeData.mainColor); grad.addColorStop(0.6, 'rgba(100, 100, 100, 0.8)'); }
             }
             grad.addColorStop(1, 'rgba(0, 0, 0, 0)');
             pCtx.fillStyle = grad; pCtx.beginPath(); pCtx.arc(32, 32, 32, 0, Math.PI * 2); pCtx.fill(); return pCanv;
@@ -359,7 +460,7 @@
         let roarCooldown = 0;
         let roars = [];
 
-        let shopUnlocks = { bigWings: false, demonHorns: false, voidTheme: false };
+        let shopUnlocks = { bigWings: false, demonHorns: false, voidTheme: false, dragonHeart: false, fireStorm: false, speedBoots: false, trailOfFire: false };
 
         const xpGems = []; const fireParticles = []; const enemies = []; const projectiles = []; const trailParticles = [];
         const passives = []; const biomeParticles = []; const healParticles = [];
@@ -411,7 +512,13 @@
                 shopUnlocks[item] = true;
                 document.getElementById('coinCount').innerText = coins;
                 document.getElementById('shopCoinCount').innerText = coins;
+                
                 if(item === 'voidTheme') { selectTheme('void'); applyThemeColors(); }
+                if(item === 'dragonHeart') { maxHp += 1500; dragonHp = maxHp; updateUI(); }
+                if(item === 'fireStorm') { stats.fireDamage *= 2; }
+                if(item === 'speedBoots') { stats.baseMaxSpeed *= 1.25; }
+                if(item === 'trailOfFire') { stats.trailDamage = true; }
+                
                 renderShop();
             }
         };
@@ -427,6 +534,18 @@
                 </div>
                 <div class="upgrade-card" onclick="buyItem('voidTheme', 500)" style="opacity: ${shopUnlocks.voidTheme ? '0.3' : '1'}; border-color:#cc00ff;">
                     <div style="font-size:40px;">🌌</div><h3 style="color:#fff;">Hiçlik Ruhu</h3><p style="color:#ffd700;">500 Koin</p><p style="font-size:12px; color:#aaa; margin-top:5px;">Rengini hiçlik moruna dönüştürür.</p>
+                </div>
+                <div class="upgrade-card" onclick="buyItem('dragonHeart', 300)" style="opacity: ${shopUnlocks.dragonHeart ? '0.3' : '1'}; border-color:#ff3300;">
+                    <div style="font-size:40px;">❤️</div><h3 style="color:#fff;">Ejderha Kalbi</h3><p style="color:#ffd700;">300 Koin</p><p style="font-size:12px; color:#aaa; margin-top:5px;">Maksimum canını 1500 artırır ve yeniler.</p>
+                </div>
+                <div class="upgrade-card" onclick="buyItem('fireStorm', 400)" style="opacity: ${shopUnlocks.fireStorm ? '0.3' : '1'}; border-color:#ff8800;">
+                    <div style="font-size:40px;">🔥</div><h3 style="color:#fff;">Ateş Fırtınası</h3><p style="color:#ffd700;">400 Koin</p><p style="font-size:12px; color:#aaa; margin-top:5px;">Alev hasarını kalıcı olarak ikiye katlar.</p>
+                </div>
+                <div class="upgrade-card" onclick="buyItem('speedBoots', 200)" style="opacity: ${shopUnlocks.speedBoots ? '0.3' : '1'}; border-color:#00ffff;">
+                    <div style="font-size:40px;">💨</div><h3 style="color:#fff;">Rüzgar Çizmeleri</h3><p style="color:#ffd700;">200 Koin</p><p style="font-size:12px; color:#aaa; margin-top:5px;">Süzülme hızını %25 artırır.</p>
+                </div>
+                <div class="upgrade-card" onclick="buyItem('trailOfFire', 350)" style="opacity: ${shopUnlocks.trailOfFire ? '0.3' : '1'}; border-color:#ff5500;">
+                    <div style="font-size:40px;">🌋</div><h3 style="color:#fff;">Yakan İz</h3><p style="color:#ffd700;">350 Koin</p><p style="font-size:12px; color:#aaa; margin-top:5px;">Kuyruğundan düşmanları yakan magma dökülür.</p>
                 </div>
             `;
         }
@@ -481,9 +600,9 @@
             return closest;
         }
 
-        // --- OPTİMİZASYON: Hasar Çarpanı artırıldı! (0.8 -> 1.5) ---
         const stats = { 
-            baseMaxSpeed: 16, fireVolume: 4, fireDamage: 1.5,
+            baseMaxSpeed: 10, 
+            fireVolume: 4, fireDamage: 1.5,
             lifeStealChance: 0, rageEfficiency: 1, 
             fireSizeMult: 1, critChance: 0, trailDamage: false 
         };
@@ -512,8 +631,7 @@
             { id: 'lifesteal', icon: '🧛', title: 'Vampir Kanı', desc: 'Ateşle %5 can çalma şansı.' },
             { id: 'rage', icon: '💢', title: 'Öfke Kontrolü', desc: 'Öfke daha hızlı dolar ve uzun sürer.' },
             { id: 'size', icon: '☄️', title: 'Geniş Kapsama', desc: 'Alev boyutunu büyütür.' },
-            { id: 'crit', icon: '💥', title: 'Kritik Çekirdek', desc: '%15 şansla 3 kat hasar.' },
-            { id: 'trail', icon: '🌋', title: 'Yakan İz', desc: 'Kuyruğundan magma dökülür.', unique: true }
+            { id: 'crit', icon: '💥', title: 'Kritik Çekirdek', desc: '%15 şansla 3 kat hasar.' }
         ];
         let availableUpgrades = [...allUpgrades];
 
@@ -521,6 +639,12 @@
             level++; maxXp = Math.floor(maxXp * 1.5);
             document.getElementById('levelIndicator').innerText = "SEVİYE " + level;
             document.getElementById('levelUpTitle').style.color = activeTheme.mainColor;
+            
+            if (level > maxLevelReached) {
+                maxLevelReached = level;
+                localStorage.setItem('boruMaxLevel', maxLevelReached);
+                renderThemes();
+            }
             
             let shuffled = [...availableUpgrades].sort(() => 0.5 - Math.random());
             let selected = shuffled.slice(0, 3);
@@ -556,7 +680,6 @@
             if (id === 'rage') stats.rageEfficiency *= 1.2;
             if (id === 'size') stats.fireSizeMult *= 1.3;
             if (id === 'crit') stats.critChance += 15;
-            if (id === 'trail') { stats.trailDamage = true; availableUpgrades = availableUpgrades.filter(u=>u.id!=='trail'); }
             document.getElementById('levelUpScreen').style.display = 'none';
             gameActive = true; world.lastX = world.dragonX; world.lastY = world.dragonY; animate();
         }
@@ -604,7 +727,7 @@
             ctx.moveTo(35, 0); ctx.lineTo(15, -8); ctx.lineTo(-5, -12); ctx.lineTo(-20, -18); ctx.lineTo(-12, 0); ctx.lineTo(-20, 18); ctx.lineTo(-5, 12); ctx.lineTo(15, 8);    
             ctx.closePath(); ctx.fill(); ctx.stroke();
             ctx.fillStyle = '#ffffff'; ctx.shadowColor = glowColor; 
-            ctx.shadowBlur = isMain ? 10 : 0; // --- Optimizasyon: Gölge azaltıldı ---
+            ctx.shadowBlur = isMain ? 10 : 0;
             ctx.beginPath(); ctx.moveTo(18, -4); ctx.lineTo(10, -9); ctx.lineTo(12, -2); ctx.fill(); 
             ctx.beginPath(); ctx.moveTo(18, 4); ctx.lineTo(10, 9); ctx.lineTo(12, 2); ctx.fill();
         }
@@ -677,7 +800,7 @@
             const bx = b.x - camX; const by = b.y - camY;
             ctx.save(); ctx.translate(bx, by); ctx.rotate(angleToTarget); 
             ctx.fillStyle = isHit ? '#ffffff' : '#050011'; ctx.strokeStyle = color; ctx.lineWidth = 4; 
-            ctx.shadowBlur = 15; ctx.shadowColor = glowColor; // --- Optimizasyon: Gölge 40'tan 15'e düşürüldü ---
+            ctx.shadowBlur = 15; ctx.shadowColor = glowColor;
             const pulse = Math.sin(tick * 4) * 10; const armSwing = Math.sin(tick * 2) * 0.5;
             ctx.save(); ctx.rotate(armSwing); ctx.beginPath(); ctx.moveTo(0, 0); ctx.quadraticCurveTo(80, -100, 150, -40); ctx.lineTo(180, -120); ctx.lineTo(100, -20); ctx.fill(); ctx.stroke(); ctx.restore();
             ctx.save(); ctx.rotate(-armSwing); ctx.beginPath(); ctx.moveTo(0, 0); ctx.quadraticCurveTo(80, 100, 150, 40); ctx.lineTo(180, 120); ctx.lineTo(100, 20); ctx.fill(); ctx.stroke(); ctx.restore();
@@ -708,7 +831,7 @@
                 if(b.type === 'sahmeran') bColor = '#33ff00';
                 
                 ctx.fillStyle = bColor;
-                ctx.shadowBlur = 10; // --- Optimizasyon: Gölge azaltıldı ---
+                ctx.shadowBlur = 10;
                 ctx.shadowColor = bColor;
                 
                 ctx.beginPath();
@@ -743,7 +866,7 @@
                 type: 'sahmeran',
                 x: world.dragonX + Math.cos(angle) * dist,
                 y: world.dragonY + Math.sin(angle) * dist,
-                maxHp: 40000 * (currentWave / 6), hp: 40000 * (currentWave / 6),
+                maxHp: (40000 * (currentWave / 6)) * difficultyMult, hp: (40000 * (currentWave / 6)) * difficultyMult,
                 size: 90, speed: stats.baseMaxSpeed * 0.85, wobble: 0,
                 attackCooldown: 0, spitCooldown: 150, intimidateCooldown: 400,
                 joints: Array.from({length: 20}, () => ({x: 0, y: 0, angle: 0}))
@@ -766,7 +889,7 @@
 
             boss = {
                 type: 'mega', x: bx, y: by,
-                maxHp: 100000 * waveMult, hp: 100000 * waveMult,
+                maxHp: (100000 * waveMult) * difficultyMult, hp: (100000 * waveMult) * difficultyMult,
                 size: 140, speed: stats.baseMaxSpeed * 0.25, wobble: 0, attackCooldown: 0,
                 isAggro: false, minions: []
             };
@@ -774,7 +897,7 @@
             for(let i=0; i<2; i++) {
                 let mx = bx + Math.cos(i * Math.PI) * 200; let my = by + Math.sin(i * Math.PI) * 200;
                 boss.minions.push({
-                    x: mx, y: my, maxHp: 25000 * waveMult, hp: 25000 * waveMult,
+                    x: mx, y: my, maxHp: (25000 * waveMult) * difficultyMult, hp: (25000 * waveMult) * difficultyMult,
                     size: 80, speed: stats.baseMaxSpeed * 0.6, wobble: Math.random() * Math.PI, attackCooldown: 0,
                     joints: Array.from({length: 15}, () => ({x: mx, y: my, angle: 0}))
                 });
@@ -793,7 +916,7 @@
             const angle = Math.random() * Math.PI * 2; const dist = Math.max(canvas.width, canvas.height) + 300;
             boss = { 
                 type: 'regular', x: world.dragonX + Math.cos(angle) * dist, y: world.dragonY + Math.sin(angle) * dist, 
-                maxHp: 25000 * currentWave, hp: 25000 * currentWave, 
+                maxHp: (25000 * currentWave) * difficultyMult, hp: (25000 * currentWave) * difficultyMult, 
                 size: 85, speed: stats.baseMaxSpeed * 0.7, wobble: 0, attackCooldown: 0,
                 joints: Array.from({length: 15}, () => ({x: 0, y: 0, angle: 0}))
             };
@@ -815,14 +938,16 @@
             
             if(enemies.length > 25) return;
             const angle = Math.random() * Math.PI * 2; const dist = Math.max(canvas.width, canvas.height) + 150;
-            const hpMultiplier = 1 + (currentWave * 0.2); const speedMultiplier = 1 + (currentWave * 0.1);
+            const hpMultiplier = (1 + (currentWave * 0.2)) * difficultyMult; 
+            const speedMultiplier = 1 + (currentWave * 0.1);
             const types = ['bat', 'scorpion', 'kobra', 'beetle'];
             const type = types[Math.floor(Math.random() * types.length)];
-            let eSize = 20, eSpeed = 4, eHp = 40;
-            if(type === 'bat') { eSize = 18; eSpeed = 5; }
-            if(type === 'scorpion') { eSize = 25; eSpeed = 3; eHp = 60; }
-            if(type === 'kobra') { eSize = 20; eSpeed = 4; }
-            if(type === 'beetle') { eSize = 22; eSpeed = 2; eHp = 50; }
+            
+            let eSize = 20, eSpeed = 3, eHp = 40;
+            if(type === 'bat') { eSize = 18; eSpeed = 4; }
+            if(type === 'scorpion') { eSize = 25; eSpeed = 2.5; eHp = 60; }
+            if(type === 'kobra') { eSize = 20; eSpeed = 3; }
+            if(type === 'beetle') { eSize = 22; eSpeed = 1.5; eHp = 50; }
             
             enemies.push({ x: world.dragonX + Math.cos(angle) * dist, y: world.dragonY + Math.sin(angle) * dist, hp: eHp * hpMultiplier, size: eSize, baseSpeed: eSpeed * speedMultiplier, speed: eSpeed * speedMultiplier, wobble: Math.random() * Math.PI, type: type, dashTimer: 0, attackCooldown: 0 });
         }
@@ -866,7 +991,8 @@
         function animate() {
             if (!gameActive) return;
             if (isPaused) { requestAnimationFrame(animate); return; }
-            tick += 0.08;
+            
+            tick += 0.06;
             
             if (playerSlowed > 0) playerSlowed--;
             if (playerRageBlocked > 0) playerRageBlocked--;
@@ -900,7 +1026,6 @@
             } else { world.speed = 0; }
 
             if (audioCtx && audioCtx.state !== 'suspended') {
-                windFilter.frequency.value = 150 + (world.speed * 25) + (spacePressed ? 400 : 0); windGain.gain.value = Math.min(0.8, world.speed / 24);
                 if (isBreathingFire && !spacePressed) { fireGain.gain.value = Math.min(0.6, fireGain.gain.value + 0.1); fireFilter.frequency.value = (isRageActive ? 900 : 600) + Math.random() * 300; } 
                 else fireGain.gain.value = Math.max(0, fireGain.gain.value - 0.08);
             }
@@ -1275,17 +1400,29 @@
                         e.hp -= dmg; p.life -= 0.15; isHit = true; addRage(1); 
                     } 
                 }
-                for (let tp of trailParticles) { if (tp.life > 0 && (e.x-tp.x)**2 + (e.y-tp.y)**2 < (e.size + tp.size)**2) { e.hp -= stats.fireDamage*0.5; isHit = true; addRage(0.2); } }
+                
+                // HATA DÜZELTİLDİ: Eksik kuyruk hasarı döngüsü tamamlandı
+                for (let tp of trailParticles) { 
+                    if (tp.life > 0 && (e.x - tp.x) ** 2 + (e.y - tp.y) ** 2 < (e.size + tp.size) ** 2) { 
+                        e.hp -= stats.fireDamage * 0.5; 
+                        isHit = true; 
+                        addRage(0.2); 
+                    } 
+                }
 
                 if(isHit && tick % 2 < 0.3) playHitSound(false);
 
+                // DÜŞMAN ÖLÜMÜ - DALGA İLERLEYİŞİ GÜNCELLENDİ
                 if (e.hp <= 0) {
                     playDeathSound(false);
                     score++; document.getElementById('killCount').innerText = score; killsInCurrentWave++;
                     coins += 2; document.getElementById('coinCount').innerText = coins; 
                     xpGems.push({ x: e.x, y: e.y, size: 10 + Math.random()*10 });
                     if(Math.random()*100 < stats.lifeStealChance && dragonHp < maxHp) { dragonHp = Math.min(maxHp, dragonHp + 5); updateUI(); } 
-                    if(killsInCurrentWave >= killsNeededForNextWave && !boss) { currentWave++; killsInCurrentWave = 0; showWaveText("DALGA " + currentWave); }
+                    
+                    if(killsInCurrentWave >= killsNeededForNextWave && currentWave % 3 !== 0) { 
+                        currentWave++; killsInCurrentWave = 0; showWaveText("DALGA " + currentWave); 
+                    }
                     enemies.splice(i, 1); continue;
                 }
 
@@ -1356,17 +1493,13 @@
                     ctx.fillStyle = `hsla(${hue}, ${saturation}, 8%, 0.9)`; ctx.strokeStyle = `hsla(${hue}, ${saturation}, 50%, 0.9)`; 
                     
                     ctx.shadowColor = spacePressed ? 'transparent' : ctx.strokeStyle; 
-                    ctx.shadowBlur = 0; // --- Optimizasyon: FPS düşmanı efekt kaldırıldı ---
+                    ctx.shadowBlur = 0; 
                     
                     const size = Math.max(3, 20 * (1 - colorRatio)); const stretchRatio = 1 + (currentStretcht - 1) * 0.4;
                     ctx.lineWidth = 2; ctx.beginPath(); ctx.ellipse(0, 0, size * stretchRatio, size * (1 / stretchRatio), 0, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
                     if (i > 1 && i < numSegments - 2) { ctx.fillStyle = `hsla(${hue}, ${saturation}, 30%, 0.9)`; ctx.beginPath(); ctx.moveTo(0, -size); ctx.lineTo(-size * 1.8, -size * 2.8); ctx.lineTo(-size * 1.2, -size * 0.5); ctx.fill(); ctx.beginPath(); ctx.moveTo(0, size); ctx.lineTo(-size * 1.8, size * 2.8); ctx.lineTo(-size * 1.2, size * 0.5); ctx.fill(); }
                 }
 
-                if (i === 2 && stats.hasThreeHeads) {
-                    ctx.save(); ctx.translate(-10, -25); ctx.rotate(-0.4); ctx.scale(0.6, 0.6); drawDragonHead(ctx, glowColor, armorColor, false); ctx.restore();
-                    ctx.save(); ctx.translate(-10, 25); ctx.rotate(0.4); ctx.scale(0.6, 0.6); drawDragonHead(ctx, glowColor, armorColor, false); ctx.restore();
-                }
                 ctx.restore();
             }
 
@@ -1375,7 +1508,7 @@
             const tailColor = spacePressed ? '#ffffff' : (isRageActive ? (activeTheme.rageBlueMode ? '#0088ff' : '#ffffff') : activeTheme.mainColor);
             
             ctx.fillStyle = '#0a0000'; ctx.strokeStyle = tailColor; ctx.lineWidth = 2.5; 
-            ctx.shadowBlur = 0; // --- Optimizasyon ---
+            ctx.shadowBlur = 0; 
             ctx.shadowColor = tailColor;
             ctx.beginPath(); ctx.moveTo(0, 0); ctx.lineTo(-15, -25); ctx.lineTo(-40, -35); ctx.lineTo(-25, -10); ctx.lineTo(-50, 0); ctx.lineTo(-25, 10); ctx.lineTo(-40, 35); ctx.lineTo(-15, 25); ctx.closePath(); ctx.fill(); ctx.stroke();
             ctx.fillStyle = tailColor; ctx.beginPath(); ctx.arc(-20, 0, 5, 0, Math.PI*2); ctx.fill(); ctx.restore();
