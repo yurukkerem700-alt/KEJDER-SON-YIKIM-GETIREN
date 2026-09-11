@@ -158,6 +158,11 @@
             #hireBossBtn { padding: 10px 20px; font-size: 12px; bottom: 20px; width: 90%; text-align: center;}
         }
     </style>
+   <link rel="manifest" href="manifest.json">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black">
+<meta name="apple-mobile-web-app-title" content="Gökbörü">
+<link rel="apple-touch-icon" href="icon-192.png"> 
 </head>
 <body>
 
@@ -2011,5 +2016,14 @@
             requestAnimationFrame(animate);
         }
     </script>
+   <script>
+  if ('serviceWorker' in navigator) {
+    window.addEventListener('load', () => {
+      navigator.serviceWorker.register('./service-worker.js')
+        .then(reg => console.log('Service Worker başarıyla kaydedildi!'))
+        .catch(err => console.log('Service Worker hatası:', err));
+    });
+  }
+</script> 
 </body>
 </html>
