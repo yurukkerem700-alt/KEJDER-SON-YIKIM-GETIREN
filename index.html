@@ -1,8 +1,9 @@
 <!DOCTYPE html>
 <html lang="tr">
 <head>
+    
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+   
     <title>Börü: Son Kral - Mutlak Fetih ve Özelleştirme Güncellemesi</title>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; touch-action: none; user-select: none; }
@@ -921,7 +922,19 @@
         window.addEventListener('mouseup', () => { isBreathingFire = false; });
         window.addEventListener('touchstart', (e) => { if(gameActive && !isPaused && e.target.tagName === 'CANVAS') isBreathingFire = true; }, {passive: false});
         window.addEventListener('touchend', () => { isBreathingFire = false; });
+window.addEventListener('touchmove', (e) => { 
+    if(!isJoyActive && !isPaused){ 
+        mouseScreenX = e.touches[0].clientX; 
+        mouseScreenY = e.touches[0].clientY; 
+    }
+}, { passive: false });
 
+window.addEventListener('touchstart', (e) => { 
+    if(!isJoyActive && !isPaused){ 
+        mouseScreenX = e.touches[0].clientX; 
+        mouseScreenY = e.touches[0].clientY; 
+    }
+}, { passive: false });
         function levelUp() {
             if (level >= 100) return; 
             level++; maxXp = Math.floor(maxXp * 1.15) + 5; 
