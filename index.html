@@ -1097,30 +1097,35 @@ window.addEventListener('touchstart', (e) => {
                 ctx.fillStyle = isRageActive ? '#00ffff' : '#ff0000'; ctx.shadowColor = ctx.fillStyle; ctx.shadowBlur = 10;
                 ctx.beginPath(); ctx.arc(6*gFact, -10*gFact, 3*gFact, 0, Math.PI*2); ctx.arc(6*gFact, 10*gFact, 3*gFact, 0, Math.PI*2); ctx.fill(); ctx.shadowBlur = 0;
             } else if (activeTheme.id === 'void') {
-                ctx.fillStyle = '#000000'; ctx.strokeStyle = '#cc00ff'; ctx.shadowBlur = 15; ctx.shadowColor = '#cc00ff';
-                ctx.beginPath(); ctx.moveTo(20*gFact, 0); ctx.lineTo(-20*gFact, -20*gFact); ctx.lineTo(-40*gFact, 0); ctx.lineTo(-20*gFact, 20*gFact); ctx.fill(); ctx.stroke();
-                ctx.beginPath(); ctx.arc(-10*gFact, -30*gFact, 8*gFact, 0, Math.PI*2); ctx.fill(); ctx.stroke();
-                ctx.beginPath(); ctx.arc(-10*gFact, 30*gFact, 8*gFact, 0, Math.PI*2); ctx.fill(); ctx.stroke();
-                ctx.shadowBlur = 0;
-            } else if (activeTheme.id === 'poison') {
-                // Kobra Başlığı
-                ctx.beginPath(); ctx.ellipse(-20*gFact, 0, 30*gFact, 40*gFact, 0, 0, Math.PI*2); ctx.fill(); ctx.stroke();
-                ctx.beginPath(); ctx.moveTo(-10*gFact, -10*gFact); ctx.lineTo(20*gFact, -5*gFact); ctx.lineTo(20*gFact, 5*gFact); ctx.lineTo(-10*gFact, 10*gFact); ctx.fill(); ctx.stroke();
-                ctx.fillStyle = '#ccff00'; ctx.beginPath(); ctx.arc(10*gFact, -6*gFact, 3*gFact, 0, Math.PI*2); ctx.arc(10*gFact, 6*gFact, 3*gFact, 0, Math.PI*2); ctx.fill();
-            } else if (activeTheme.id === 'abyss') {
-                ctx.beginPath(); ctx.ellipse(-10*gFact, 0, 30*gFact, 20*gFact, 0, 0, Math.PI*2); ctx.fill(); ctx.stroke();
-                ctx.beginPath(); ctx.moveTo(20*gFact, 0); ctx.lineTo(0*gFact, -10*gFact); ctx.lineTo(-10*gFact, 0); ctx.lineTo(0*gFact, 10*gFact); ctx.fill(); ctx.stroke();
-                // Fener
-                ctx.strokeStyle = '#444'; ctx.beginPath(); ctx.moveTo(-20*gFact, -15*gFact); ctx.quadraticCurveTo(0, -40*gFact, 30*gFact, -10*gFact); ctx.stroke();
-                ctx.fillStyle = '#00ffff'; ctx.shadowBlur = 15; ctx.shadowColor = '#00ffff'; ctx.beginPath(); ctx.arc(30*gFact, -10*gFact, 6*gFact, 0, Math.PI*2); ctx.fill(); ctx.shadowBlur=0;
-            } else if (activeTheme.id === 'terracotta') {
-                ctx.fillRect(-30*gFact, -20*gFact, 40*gFact, 40*gFact); ctx.strokeRect(-30*gFact, -20*gFact, 40*gFact, 40*gFact);
-                ctx.fillRect(10*gFact, -10*gFact, 20*gFact, 20*gFact); ctx.strokeRect(10*gFact, -10*gFact, 20*gFact, 20*gFact);
-                ctx.fillStyle = '#FFD700'; ctx.fillRect(20*gFact, -5*gFact, 5*gFact, 10*gFact);
-            } else if (activeTheme.id === 'blood') {
-                // Yarasa Kulakları
-                ctx.beginPath(); ctx.moveTo(-10*gFact, -15*gFact); ctx.lineTo(-30*gFact, -50*gFact); ctx.lineTo(-30*gFact, -15*gFact); ctx.fill(); ctx.stroke();
-                ctx.beginPath(); ctx.moveTo(-10*gFact, 15*gFact); ctx.lineTo(-30*gFact, 50*gFact); ctx.lineTo(-30*gFact, 15*gFact); ctx.fill(); ctx.stroke();
+        ctx.fillStyle = '#000000'; ctx.strokeStyle = '#cc00ff'; ctx.shadowBlur = 15; ctx.shadowColor = '#cc00ff';
+        ctx.beginPath(); ctx.moveTo(20*gFact, 0); ctx.lineTo(-20*gFact, -20*gFact); ctx.lineTo(-40*gFact, 0); ctx.lineTo(-20*gFact, 20*gFact); ctx.fill(); ctx.stroke();
+        ctx.beginPath(); ctx.arc(-10*gFact, -30*gFact, 8*gFact, 0, Math.PI*2); ctx.fill(); ctx.stroke();
+        ctx.beginPath(); ctx.arc(-10*gFact, 30*gFact, 8*gFact, 0, Math.PI*2); ctx.fill(); ctx.stroke();
+        ctx.shadowBlur = 0;
+    }
+    if (activeTheme.id === 'poison') {
+        // Kobra Başlığı
+        ctx.beginPath(); ctx.ellipse(-20*gFact, 0, 30*gFact, 40*gFact, 0, 0, Math.PI*2); ctx.fill(); ctx.stroke();
+        ctx.beginPath(); ctx.moveTo(-10*gFact, -10*gFact); ctx.lineTo(20*gFact, -5*gFact); ctx.lineTo(20*gFact, 5*gFact); ctx.lineTo(-10*gFact, 10*gFact); ctx.stroke();
+        ctx.fillStyle = '#ccff00'; ctx.beginPath(); ctx.arc(10*gFact, -6*gFact, 3*gFact, 0, Math.PI*2); ctx.arc(10*gFact, 6*gFact, 3*gFact, 0, Math.PI*2); ctx.fill();
+    }
+    if (activeTheme.id === 'abyss') {
+        ctx.beginPath(); ctx.ellipse(-10*gFact, 0, 30*gFact, 20*gFact, 0, 0, Math.PI*2); ctx.fill(); ctx.stroke();
+        ctx.beginPath(); ctx.moveTo(20*gFact, 0); ctx.lineTo(0*gFact, -10*gFact); ctx.lineTo(-10*gFact, 0); ctx.lineTo(0*gFact, 10*gFact); ctx.fill(); ctx.stroke();
+        // Fener
+        ctx.strokeStyle = '#444'; ctx.beginPath(); ctx.moveTo(-20*gFact, -15*gFact); ctx.quadraticCurveTo(0, -40*gFact, 30*gFact, -10*gFact); ctx.stroke();
+        ctx.fillStyle = '#00ffff'; ctx.shadowBlur = 15; ctx.shadowColor = '#00ffff'; ctx.beginPath(); ctx.arc(30*gFact, -10*gFact, 6*gFact, 0, Math.PI*2); ctx.fill(); ctx.shadowBlur = 0;
+    }
+    if (activeTheme.id === 'terracotta') {
+        ctx.fillRect(-30*gFact, -20*gFact, 40*gFact, 40*gFact); ctx.strokeRect(-30*gFact, -20*gFact, 40*gFact, 40*gFact);
+        ctx.fillRect(10*gFact, -10*gFact, 20*gFact, 20*gFact); ctx.strokeRect(10*gFact, -10*gFact, 20*gFact, 20*gFact);
+        ctx.fillStyle = '#FFD700'; ctx.fillRect(20*gFact, -5*gFact, 5*gFact, 10*gFact);
+    }
+    if (activeTheme.id === 'blood') {
+        // Yarasa Kulakları
+        ctx.beginPath(); ctx.moveTo(-10*gFact, -15*gFact); ctx.lineTo(-30*gFact, -50*gFact); ctx.lineTo(-30*gFact, -15*gFact); ctx.fill(); ctx.stroke();
+        ctx.beginPath(); ctx.moveTo(-10*gFact, 15*gFact); ctx.lineTo(-30*gFact, 50*gFact); ctx.lineTo(-30*gFact, 15*gFact); ctx.fill(); ctx.stroke();
+    }
                 ctx.beginPath(); ctx.ellipse(-10*gFact, 0, 25*gFact, 15*gFact, 0, 0, Math.PI*2); ctx.fill(); ctx.stroke();
                 ctx.beginPath(); ctx.moveTo(15*gFact, 0); ctx.lineTo(0, -10*gFact); ctx.lineTo(-10*gFact, 0); ctx.lineTo(0, 10*gFact); ctx.fill(); ctx.stroke();
                 ctx.fillStyle = '#ff0000'; ctx.shadowBlur=10; ctx.shadowColor='#ff0000'; ctx.beginPath(); ctx.arc(5*gFact, -5*gFact, 3*gFact, 0, Math.PI*2); ctx.arc(5*gFact, 5*gFact, 3*gFact, 0, Math.PI*2); ctx.fill(); ctx.shadowBlur=0;
