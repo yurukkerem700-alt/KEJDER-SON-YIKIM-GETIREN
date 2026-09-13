@@ -745,8 +745,8 @@
         const sahmeranProjectiles = []; const poisonPools = [];
 
         let lastBiomeDisplayName = ""; let tick = 0; const gridSize = 120;
-        const stats = { baseMaxSpeed: isMobile ? 5 : 6, fireVolume: 4, fireDamage: 1.5, lifeStealChance: 0, rageEfficiency: 1, fireSizeMult: 1, critChance: 0, trailDamage: false };
-        const world = { dragonX: 0, dragonY: 0, lastX: 0, lastY: 0, speed: 0, comfortZone: 150, deadZone: 10 };
+       const stats = { baseMaxSpeed: isMobile ? 7 : 9, fireVolume: 4, fireDamage: 1.5, lifeStealChance: 0, rageEfficiency: 1, fireSizeMult: 1, critChance: 0, trailDamage: false };
+const world = { dragonX: 0, dragonY: 0, lastX: 0, lastY: 0, speed: 0, comfortZone: 80, deadZone: 15 };
         let buffLevels = { fire: 0, hp: 0, speed: 0, lifesteal: 0, rage: 0, size: 0, crit: 0 };
         
         let joints = []; let segmentLength = 16;
@@ -1405,14 +1405,20 @@ window.addEventListener('touchstart', (e) => {
             const screenDx = mouseScreenX - canvas.width / 2; const screenDy = mouseScreenY - canvas.height / 2; const distFromCenter = Math.hypot(screenDx, screenDy);
 
             if (distFromCenter > world.deadZone && !isSuperBeamCharging && !isSuperBeamFiring) {
-                let cSpeed = currentMaxSpeed;
-                if (distFromCenter < world.comfortZone) cSpeed = currentMaxSpeed * ((distFromCenter - world.deadZone) / (world.comfortZone - world.deadZone));
-                // HASSASİYET ÇARPANI UYGULAMASI (Dönüş/hareket hızını etkiler)
-                cSpeed *= playerSensitivity;
-                if (cSpeed > currentMaxSpeed * 1.5) cSpeed = currentMaxSpeed * 1.5; // Çok uçmasın
-                
-                world.dragonX += (screenDx / distFromCenter) * cSpeed; world.dragonY += (screenDy / distFromCenter) * cSpeed; world.speed = cSpeed;
-            } else { world.speed = 0; }
+    let targetSpeed = currentMaxSpeed;
+    if (distFromCenter < world.comfortZone) {
+        targetSpeed = currentMaxSpeed * Math.max(0, (distFromCenter - world.deadZone) / (world.comfortZone - world.deadZone));
+    }
+    targetSpeed *= playerSensitivity;
+    
+    // Akıcı süzülme hissi için yumuşak hız geçişi (lerp)
+    world.speed += (targetSpeed - world.speed) * 0.15;
+
+    world.dragonX += (screenDx / distFromCenter) * world.speed;
+    world.dragonY += (screenDy / distFromCenter) * world.speed;
+} else {
+    world.speed += (0 - world.speed) * 0.15;
+}
 
             // GÜVENLİ BÖLGE MANTIĞI
             let distToSafe = Math.hypot(world.dragonX - safeZone.x, world.dragonY - safeZone.y);
